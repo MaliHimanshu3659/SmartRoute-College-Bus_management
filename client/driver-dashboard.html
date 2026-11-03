@@ -451,8 +451,6 @@
         }
 
         // Driver GPS Location Sharing
-        let mockGpsInterval = null;
-
         async function postBusLocation(lat, lng) {
             try {
                 await fetchApi('/driver/location', {
@@ -471,53 +469,82 @@
         async function toggleLocationSharing() {
             const btn = document.getElementById('btn-share-location');
             if (!isSharingGps) {
-                isSharingGps = true;
-                btn.textContent = '🛑 Stop GPS Sharing';
-                btn.className = 'btn btn-danger';
-                showAlert('Live GPS sharing active! Transmitting coordinates to students.', 'success');
-
-                // 1. Immediately broadcast initial coordinates so students see the red bus marker right away
-                let initialLat = 24.5883;
-                let initialLng = 73.7125;
-                if (routeData && routeData.stops && routeData.stops.length > 0) {
-                    initialLat = routeData.stops[0].latitude;
-                    initialLng = routeData.stops[0].longitude;
-                }
-                await postBusLocation(initialLat, initialLng);
-
-                // 2. Hardware GPS watcher (for mobile devices / GPS enabled browsers)
-                if (navigator.geolocation) {
-                    gpsWatchId = navigator.geolocation.watchPosition(
-                        async (pos) => {
-                            await postBusLocation(pos.coords.latitude, pos.coords.longitude);
-                        },
-                        (err) => {
-                            console.warn('Hardware GPS watcher note:', err.message);
-                        },
-                        { enableHighAccuracy: true, maximumAge: 5000, timeout: 5000 }
-                    );
+                if (!navigator.geolocation) {
+                    showAlert('Geolocation is not supported by your browser.', 'danger');
+                    return;
                 }
 
-                // 3. Fallback route step simulator (every 8s, moves along the route stops for testing)
-                let stopIndex = 0;
-                mockGpsInterval = setInterval(async () => {
-                    if (!isSharingGps) return;
-                    if (routeData && routeData.stops && routeData.stops.length > 0) {
-                        stopIndex = (stopIndex + 1) % routeData.stops.length;
-                        const s = routeData.stops[stopIndex];
-                        await postBusLocation(s.latitude, s.longitude);
-                    }
-                }, 8000);
+                btn.disabled = true;
+                btn.textContent = '⏳ Acquiring GPS Location...';
+
+                // Query device's exact GPS location with high accuracy
+                navigator.geolocation.getCurrentPosition(
+                    async (pos) => {
+                        isSharingGps = true;
+                        btn.disabled = false;
+                        btn.textContent = '🛑 Stop GPS Sharing';
+                        btn.className = 'btn btn-danger';
+
+                        const exactLat = pos.coords.latitude;
+                        const exactLng = pos.coords.longitude;
+                        showAlert(`GPS Locked: ${exactLat.toFixed(5)}, ${exactLng.toFixed(5)}. Broadcasting live location.`, 'success');
+
+                        // 1. Post real physical coordinates immediately
+                        await postBusLocation(exactLat, exactLng);
+
+                        // 2. Plot exact marker on Driver's map and center map
+                        if (map) {
+                            if (!window.driverCurrentMarker) {
+                                const driverPin = L.divIcon({
+                                    className: 'custom-driver-pin',
+                                    html: '<div style="background:#ef4444; color:#fff; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; border:3px solid white; box-shadow:0 0 10px rgba(239,68,68,0.7);">🚍</div>',
+                                    iconSize: [36, 36],
+                                    iconAnchor: [18, 18]
+                                });
+                                window.driverCurrentMarker = L.marker([exactLat, exactLng], { icon: driverPin, zIndexOffset: 2000 }).addTo(map);
+                            } else {
+                                window.driverCurrentMarker.setLatLng([exactLat, exactLng]);
+                            }
+                            window.driverCurrentMarker.bindPopup('<b>🚍 Your Exact Location (Live GPS Active)</b>').openPopup();
+                            map.setView([exactLat, exactLng], 15);
+                        }
+
+                        // 3. Keep continuous real-time tracking active
+                        gpsWatchId = navigator.geolocation.watchPosition(
+                            async (watchPos) => {
+                                const lat = watchPos.coords.latitude;
+                                const lng = watchPos.coords.longitude;
+                                await postBusLocation(lat, lng);
+                                if (window.driverCurrentMarker) {
+                                    window.driverCurrentMarker.setLatLng([lat, lng]);
+                                }
+                            },
+                            (watchErr) => {
+                                console.warn('Continuous GPS watch note:', watchErr.message);
+                            },
+                            { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
+                        );
+                    },
+                    (err) => {
+                        btn.disabled = false;
+                        btn.textContent = '📡 Start GPS Sharing';
+                        btn.className = 'btn btn-teal';
+                        isSharingGps = false;
+                        let msg = 'Could not acquire GPS location. ';
+                        if (err.code === 1) msg += 'Please allow location permission in your browser address bar.';
+                        else if (err.code === 2) msg += 'Position unavailable. Please check your device location settings.';
+                        else if (err.code === 3) msg += 'Location request timed out. Please try again.';
+                        else msg += err.message;
+                        showAlert(msg, 'warning');
+                    },
+                    { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+                );
 
             } else {
                 isSharingGps = false;
                 if (gpsWatchId && navigator.geolocation) {
                     navigator.geolocation.clearWatch(gpsWatchId);
                     gpsWatchId = null;
-                }
-                if (mockGpsInterval) {
-                    clearInterval(mockGpsInterval);
-                    mockGpsInterval = null;
                 }
                 btn.textContent = '📡 Start GPS Sharing';
                 btn.className = 'btn btn-teal';

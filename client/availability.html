@@ -646,17 +646,30 @@
                             <strong style="color:#ef4444; font-size:14px;">🔴 LIVE DRIVER LOCATION</strong><br>
                             <b>${loc.busName || 'College Bus'}</b><br>
                             <small class="text-muted">Driver: ${loc.driverName || 'Active Driver'}</small><br>
-                            <span class="badge" style="background:#ef4444; color:#fff; font-size:11px; margin-top:4px;">● Transmitting GPS</span>
+                            <span class="badge" style="background:#ef4444; color:#fff; font-size:11px; margin-top:4px;">● GPS Active (${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)})</span>
                         </div>
                     `);
+
+                    // Center on bus once when it first appears
+                    if (!window.hasAutoCenteredBus) {
+                        map.panTo(busLatLng);
+                        window.hasAutoCenteredBus = true;
+                    }
 
                     const feedbackEl = document.getElementById('bus-live-feedback');
                     if (feedbackEl) {
                         feedbackEl.innerHTML = `
                             <div class="p-2 mt-2 rounded border" style="background: #fef2f2; border-color: #fecaca !important;">
-                                <span class="badge" style="background:#ef4444; color:#fff;">● LIVE BUS</span> 
-                                <strong class="text-danger">Driver is actively broadcasting location!</strong><br>
-                                <small class="text-muted">${loc.busName || 'Campus Route 01'} (Driver: ${loc.driverName || 'Active'}) • ${formatTime(loc.updatedAt)}</small>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="badge" style="background:#ef4444; color:#fff;">● LIVE BUS</span> 
+                                        <strong class="text-danger">Driver is actively broadcasting GPS!</strong>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-danger py-0 px-2" onclick="map.setView([${loc.lat}, ${loc.lng}], 16); if (busMarker) busMarker.openPopup();">🔍 Focus On Bus</button>
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    Coordinates: <code>${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}</code> • Updated: ${formatTime(loc.updatedAt)}
+                                </div>
                             </div>
                         `;
                     }
