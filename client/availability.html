@@ -108,10 +108,10 @@
                             </div>
 
                             <div class="d-flex gap-2 mb-3">
-                                <button type="button" class="btn btn-outline btn-sm flex-fill" onclick="useCurrentLocation()">
+                                <button type="button" class="btn btn-outline btn-sm flex-fill" id="btn-gps" onclick="useCurrentLocation()">
                                     📍 Use My GPS Location
                                 </button>
-                                <button type="button" class="btn btn-primary btn-sm flex-fill" onclick="saveAvailability()">
+                                <button type="button" class="btn btn-primary btn-sm flex-fill" id="btn-save-stop" onclick="saveAvailability()">
                                     Save Pickup Stop
                                 </button>
                             </div>
@@ -151,7 +151,7 @@
 
                         <!-- Fast One-Click Scan for Testing on Same Device -->
                         <div class="mb-3 p-3 bg-light rounded border text-center">
-                            <button type="button" class="btn btn-teal w-100 py-2 fw-bold font-display" onclick="oneClickScanLiveToken()">
+                            <button type="button" class="btn btn-teal w-100 py-2 fw-bold font-display" id="btn-instant-scan" onclick="oneClickScanLiveToken()">
                                 ⚡ Instant Boarding Scan (Scan Driver's Live Code)
                             </button>
                             <small class="text-muted d-block mt-2">Connects directly to driver's live QR code session.</small>
@@ -175,7 +175,7 @@
                             <span class="text-muted small d-block mb-1">Manual Token Entry (if camera is unavailable):</span>
                             <div class="input-group">
                                 <input type="text" id="manual-token-input" class="form-control" placeholder="Enter QR token code...">
-                                <button class="btn btn-primary" type="button" onclick="submitManualToken()">Verify Token</button>
+                                <button class="btn btn-primary" type="button" id="btn-manual-verify" onclick="submitManualToken()">Verify Token</button>
                             </div>
                         </div>
                     </div>
@@ -217,7 +217,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script>
@@ -385,11 +385,6 @@
             const statusPill = document.getElementById('status-pill');
 
             if (choice === 'YES') {
-                if (!selectedStopId && allStops.length > 0) {
-                    selectedStopId = allStops[0].id;
-                    const dropdown = document.getElementById('stop-dropdown');
-                    if (dropdown) dropdown.value = selectedStopId;
-                }
                 yesBtn.className = 'btn btn-teal flex-fill py-2 fw-bold';
                 noBtn.className = 'btn btn-outline flex-fill py-2 fw-bold';
                 stopArea.style.display = 'block';
@@ -508,13 +503,7 @@
         // Camera Scanner Logic (Supports laptops, webcams, and mobile devices)
         async function startScanner() {
             const scannerFeedback = document.getElementById('scanner-feedback');
-            scannerFeedback.textContent = 'Initializing camera...';
-
-            if (typeof Html5Qrcode === 'undefined') {
-                scannerFeedback.textContent = 'QR scanner script still loading. Use Instant Boarding Scan below.';
-                showAlert('Scanner library loading. Use the Instant Boarding Scan button below!', 'info');
-                return;
-            }
+            scannerFeedback.textContent = 'Checking camera devices...';
 
             try {
                 if (html5QrScanner) {
@@ -522,7 +511,7 @@
                 }
                 html5QrScanner = new Html5Qrcode("qr-reader");
 
-                const cameras = await Html5Qrcode.getCameras().catch(() => []);
+                const cameras = await Html5Qrcode.getCameras();
                 let cameraConfig = { facingMode: "user" };
 
                 if (cameras && cameras.length > 0) {
@@ -541,8 +530,8 @@
                 scannerFeedback.textContent = 'Camera active! Point camera at driver QR code.';
             } catch (err) {
                 console.error('Camera error:', err);
-                scannerFeedback.innerHTML = `<span class="text-danger">Camera error: ${err.message || 'Webcam access denied or unavailable.'}</span><br><small class="text-muted">Use the <b>Instant Boarding Scan</b> button above or enter the token below.</small>`;
-                showAlert('Camera not accessible. Please use the 1-Click Instant Scan button above!', 'warning');
+                scannerFeedback.textContent = 'Camera note: ' + (err.message || 'Permission denied or webcam not detected.');
+                showAlert('Camera not accessible. Please use the 1-Click Instant Scan button below!', 'info');
             }
         }
 
@@ -644,6 +633,17 @@
             await loadCurrentAvailability();
             checkLiveBusLocation();
             setInterval(checkLiveBusLocation, 15000);
+
+            // Direct DOM event bindings for instant responsiveness
+            document.getElementById('btn-choice-yes')?.addEventListener('click', () => setChoiceAndSave('YES'));
+            document.getElementById('btn-choice-no')?.addEventListener('click', () => setChoiceAndSave('NO'));
+            document.getElementById('stop-dropdown')?.addEventListener('change', onStopDropdownChanged);
+            document.getElementById('btn-gps')?.addEventListener('click', useCurrentLocation);
+            document.getElementById('btn-save-stop')?.addEventListener('click', saveAvailability);
+            document.getElementById('btn-instant-scan')?.addEventListener('click', oneClickScanLiveToken);
+            document.getElementById('start-scan-btn')?.addEventListener('click', startScanner);
+            document.getElementById('stop-scan-btn')?.addEventListener('click', stopScanner);
+            document.getElementById('btn-manual-verify')?.addEventListener('click', submitManualToken);
         })();
     </script>
 </body>

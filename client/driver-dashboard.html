@@ -507,6 +507,10 @@
             await generateQrSession();
             // Poll for attendance updates every 5 seconds for live sync
             setInterval(loadDriverData, 5000);
+
+            // Direct event bindings
+            document.getElementById('btn-generate-qr')?.addEventListener('click', generateQrSession);
+            document.getElementById('btn-share-location')?.addEventListener('click', toggleLocationSharing);
         })();
     </script>
 </body>

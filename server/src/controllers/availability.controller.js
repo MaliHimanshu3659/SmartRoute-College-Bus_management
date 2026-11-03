@@ -85,18 +85,13 @@ async function submitAvailability(req, res) {
                 }
             }
 
-            if (!validatedStopId && stopId !== undefined && stopId !== null) {
+            if (!validatedStopId && stopId) {
                 const stopMatch = allStops.find(s => s.id === parseInt(stopId, 10));
                 if (stopMatch) {
                     validatedStopId = stopMatch.id;
                     matchedStopName = stopMatch.stop_name;
                     finalLat = parseFloat(stopMatch.latitude);
                     finalLng = parseFloat(stopMatch.longitude);
-                } else {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'The selected bus stop was not found.'
-                    });
                 }
             }
 
@@ -218,13 +213,11 @@ async function getDashboardStats(req, res) {
         for (let i = 0; i < 5; i++) {
             const dayDate = new Date(monday);
             dayDate.setDate(monday.getDate() + i);
-            const iso = dayDate.toLocaleDateString('en-CA');
+            const iso = dayDate.toISOString().split('T')[0];
             const isToday = iso === todayDate;
 
             const rec = monthRecords.find(r => {
-                const rIso = typeof r.availability_date === 'string' 
-                    ? r.availability_date.split('T')[0].split(' ')[0] 
-                    : new Date(r.availability_date).toLocaleDateString('en-CA');
+                const rIso = new Date(r.availability_date).toISOString().split('T')[0];
                 return rIso === iso;
             });
 

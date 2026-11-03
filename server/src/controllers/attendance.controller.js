@@ -41,10 +41,10 @@ async function createAttendanceSession(req, res) {
 async function getActiveSession(req, res) {
     try {
         const driverId = req.session.user.id;
-        const todayDate = new Date().toLocaleDateString('en-CA');
+        const todayDate = new Date().toISOString().split('T')[0];
 
         const sessions = await query(
-            `SELECT id, route_id, raw_token, expires_at, created_at, is_revoked 
+            `SELECT id, route_id, expires_at, created_at, is_revoked 
              FROM attendance_sessions 
              WHERE driver_id = ? AND session_date = ? AND is_revoked = 0 AND expires_at > NOW()
              ORDER BY id DESC LIMIT 1`,
@@ -58,33 +58,10 @@ async function getActiveSession(req, res) {
         const session = sessions[0];
         const remainingSeconds = Math.max(0, Math.round((new Date(session.expires_at).getTime() - Date.now()) / 1000));
 
-        if (remainingSeconds <= 0) {
-            return res.json({ success: true, hasActiveSession: false });
-        }
-
-        // Generate QR image data url for the active session
-        const QRCode = require('qrcode');
-        const qrPayload = JSON.stringify({
-            sessionId: session.id,
-            token: session.raw_token,
-            routeId: session.route_id,
-            date: todayDate,
-            expiresAt: new Date(session.expires_at).toISOString()
-        });
-
-        const qrDataUrl = await QRCode.toDataURL(qrPayload, {
-            errorCorrectionLevel: 'M',
-            margin: 2,
-            width: 280,
-            color: { dark: '#0d1f3c', light: '#ffffff' }
-        });
-
         return res.json({
             success: true,
-            hasActiveSession: true,
+            hasActiveSession: remainingSeconds > 0,
             sessionId: session.id,
-            token: session.raw_token,
-            qrDataUrl,
             remainingSeconds,
             expiresAt: session.expires_at
         });
@@ -151,7 +128,7 @@ async function scanAttendance(req, res) {
         }
 
         const session = validation.session;
-        const todayDate = new Date().toLocaleDateString('en-CA');
+        const todayDate = new Date().toISOString().split('T')[0];
 
         // 2. Check if attendance already recorded today for this student
         const existingAttendance = await query(

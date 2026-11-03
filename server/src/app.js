@@ -16,37 +16,11 @@ const adminRoutes = require('./routes/admin.routes');
 
 const app = express();
 
-// Security HTTP headers with permissive CSP for CDNs (Bootstrap, Leaflet, Google Fonts, html5-qrcode)
+// Security HTTP headers (disable strict CSP so CDNs, map tiles, webcams, and inline events work seamlessly)
 app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: [
-                "'self'",
-                "'unsafe-inline'",
-                "https://cdn.jsdelivr.net",
-                "https://unpkg.com",
-                "https://cdnjs.cloudflare.com"
-            ],
-            styleSrc: [
-                "'self'",
-                "'unsafe-inline'",
-                "https://cdn.jsdelivr.net",
-                "https://unpkg.com",
-                "https://fonts.googleapis.com"
-            ],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            imgSrc: [
-                "'self'",
-                "data:",
-                "blob:",
-                "https://*.tile.openstreetmap.org",
-                "https://unpkg.com"
-            ],
-            connectSrc: ["'self'"]
-        }
-    },
-    crossOriginEmbedderPolicy: false
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false
 }));
 
 app.use(cors({

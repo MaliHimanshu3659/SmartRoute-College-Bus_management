@@ -163,7 +163,7 @@ async function getDriverDashboard(req, res) {
  */
 async function getDriverAvailability(req, res) {
     try {
-        const todayDate = new Date().toLocaleDateString('en-CA');
+        const todayDate = new Date().toISOString().split('T')[0];
         const records = await query(
             `SELECT u.username, u.full_name, a.use_bus, a.latitude, a.longitude, s.stop_name, att.marked_at
              FROM student_availability a
