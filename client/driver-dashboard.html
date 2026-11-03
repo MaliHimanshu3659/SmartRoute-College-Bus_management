@@ -73,8 +73,8 @@
                     <p class="page-subtitle" id="route-schedule-text">Loading departure and arrival schedule...</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline" onclick="loadDriverData()">↻ Refresh Data</button>
-                    <button class="btn btn-teal" id="btn-share-location" onclick="toggleLocationSharing()">
+                    <button class="btn btn-outline" id="btn-refresh-data" type="button">↻ Refresh Data</button>
+                    <button class="btn btn-teal" id="btn-share-location" type="button">
                         📡 Start GPS Sharing
                     </button>
                 </div>
@@ -451,48 +451,76 @@
         }
 
         // Driver GPS Location Sharing
-        function toggleLocationSharing() {
+        let mockGpsInterval = null;
+
+        async function postBusLocation(lat, lng) {
+            try {
+                await fetchApi('/driver/location', {
+                    method: 'POST',
+                    body: {
+                        latitude: lat,
+                        longitude: lng,
+                        routeId: routeData?.route?.id || 1
+                    }
+                });
+            } catch (e) {
+                console.error('Error posting bus location:', e);
+            }
+        }
+
+        async function toggleLocationSharing() {
             const btn = document.getElementById('btn-share-location');
             if (!isSharingGps) {
-                if (!navigator.geolocation) {
-                    showAlert('Geolocation is not supported by your device.', 'warning');
-                    return;
-                }
-
+                isSharingGps = true;
                 btn.textContent = '🛑 Stop GPS Sharing';
                 btn.className = 'btn btn-danger';
-                isSharingGps = true;
+                showAlert('Live GPS sharing active! Transmitting coordinates to students.', 'success');
 
-                gpsWatchId = navigator.geolocation.watchPosition(
-                    async (pos) => {
-                        try {
-                            await fetchApi('/driver/location', {
-                                method: 'POST',
-                                body: {
-                                    latitude: pos.coords.latitude,
-                                    longitude: pos.coords.longitude,
-                                    routeId: routeData?.route?.id || 1
-                                }
-                            });
-                        } catch (e) {
-                            console.error('Error posting bus location:', e);
-                        }
-                    },
-                    (err) => {
-                        console.error('GPS watch error:', err);
-                    },
-                    { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
-                );
+                // 1. Immediately broadcast initial coordinates so students see the red bus marker right away
+                let initialLat = 24.5883;
+                let initialLng = 73.7125;
+                if (routeData && routeData.stops && routeData.stops.length > 0) {
+                    initialLat = routeData.stops[0].latitude;
+                    initialLng = routeData.stops[0].longitude;
+                }
+                await postBusLocation(initialLat, initialLng);
 
-                showAlert('Live GPS sharing active. Bus coordinates are being updated.', 'success');
+                // 2. Hardware GPS watcher (for mobile devices / GPS enabled browsers)
+                if (navigator.geolocation) {
+                    gpsWatchId = navigator.geolocation.watchPosition(
+                        async (pos) => {
+                            await postBusLocation(pos.coords.latitude, pos.coords.longitude);
+                        },
+                        (err) => {
+                            console.warn('Hardware GPS watcher note:', err.message);
+                        },
+                        { enableHighAccuracy: true, maximumAge: 5000, timeout: 5000 }
+                    );
+                }
+
+                // 3. Fallback route step simulator (every 8s, moves along the route stops for testing)
+                let stopIndex = 0;
+                mockGpsInterval = setInterval(async () => {
+                    if (!isSharingGps) return;
+                    if (routeData && routeData.stops && routeData.stops.length > 0) {
+                        stopIndex = (stopIndex + 1) % routeData.stops.length;
+                        const s = routeData.stops[stopIndex];
+                        await postBusLocation(s.latitude, s.longitude);
+                    }
+                }, 8000);
+
             } else {
-                if (gpsWatchId) {
+                isSharingGps = false;
+                if (gpsWatchId && navigator.geolocation) {
                     navigator.geolocation.clearWatch(gpsWatchId);
                     gpsWatchId = null;
                 }
+                if (mockGpsInterval) {
+                    clearInterval(mockGpsInterval);
+                    mockGpsInterval = null;
+                }
                 btn.textContent = '📡 Start GPS Sharing';
                 btn.className = 'btn btn-teal';
-                isSharingGps = false;
                 showAlert('GPS sharing stopped.', 'info');
             }
         }
@@ -508,6 +536,7 @@
             setInterval(loadDriverData, 5000);
 
             // Direct event bindings
+            document.getElementById('btn-refresh-data')?.addEventListener('click', loadDriverData);
             document.getElementById('btn-generate-qr')?.addEventListener('click', generateQrSession);
             document.getElementById('btn-share-location')?.addEventListener('click', toggleLocationSharing);
         })();

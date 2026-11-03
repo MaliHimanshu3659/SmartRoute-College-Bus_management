@@ -227,17 +227,18 @@ async function updateBusLocation(req, res) {
 async function getLatestBusLocation(req, res) {
     try {
         const locations = await query(
-            `SELECT b.latitude, b.longitude, b.recorded_at, u.full_name as driver_name, r.bus_name
+            `SELECT b.latitude, b.longitude, b.recorded_at, u.full_name as driver_name, r.bus_name,
+                    TIMESTAMPDIFF(SECOND, b.recorded_at, NOW()) as seconds_ago
              FROM bus_live_locations b
              JOIN users u ON b.driver_id = u.id
              LEFT JOIN routes r ON b.route_id = r.id
-             WHERE b.recorded_at >= NOW() - INTERVAL 15 MINUTE
-             ORDER BY b.recorded_at DESC
+             WHERE b.recorded_at >= NOW() - INTERVAL 60 MINUTE
+             ORDER BY b.id DESC
              LIMIT 1`
         );
 
         if (locations.length === 0) {
-            return res.json({ success: true, live: false, message: 'No live bus location within last 15 minutes.' });
+            return res.json({ success: true, live: false, message: 'No live bus location within last 60 minutes.' });
         }
 
         const loc = locations[0];
@@ -249,7 +250,8 @@ async function getLatestBusLocation(req, res) {
                 lng: parseFloat(loc.longitude),
                 driverName: loc.driver_name,
                 busName: loc.bus_name,
-                updatedAt: loc.recorded_at
+                updatedAt: loc.recorded_at,
+                secondsAgo: loc.seconds_ago
             }
         });
     } catch (err) {

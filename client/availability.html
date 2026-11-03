@@ -19,6 +19,26 @@
             border-radius: var(--radius-sm);
             overflow: hidden;
         }
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.15); box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .red-bus-pin {
+            background: #ef4444;
+            color: #ffffff;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            border: 3px solid #ffffff;
+            box-shadow: 0 3px 12px rgba(239, 68, 68, 0.6);
+            animation: pulse-red 1.5s infinite;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -607,18 +627,39 @@
                 const res = await fetchApi('/driver/latest-location');
                 if (res && res.live && res.location) {
                     const loc = res.location;
+                    const busLatLng = [loc.lat, loc.lng];
+
                     if (busMarker) {
-                        busMarker.setLatLng([loc.lat, loc.lng]);
+                        busMarker.setLatLng(busLatLng);
                     } else {
-                        const busIcon = L.divIcon({
-                            className: 'bus-pin',
-                            html: '<div style="background:#0d1f3c; color:#00c9a7; font-size:16px; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.3); border:2px solid white;">🚌</div>',
-                            iconSize: [32, 32]
+                        const redBusIcon = L.divIcon({
+                            className: 'custom-red-bus',
+                            html: '<div class="red-bus-pin" title="Live Driver Bus Location">🚍</div>',
+                            iconSize: [42, 42],
+                            iconAnchor: [21, 21]
                         });
-                        busMarker = L.marker([loc.lat, loc.lng], { icon: busIcon }).addTo(map);
+                        busMarker = L.marker(busLatLng, { icon: redBusIcon, zIndexOffset: 2000 }).addTo(map);
                     }
-                    busMarker.bindPopup(`<b>${loc.busName || 'College Bus'}</b><br>Driver: ${loc.driverName || 'Active'}`).openPopup();
-                    document.getElementById('bus-live-feedback').textContent = `Live Bus Location: Transmitting live coordinates (${formatTime(loc.updatedAt)})`;
+
+                    busMarker.bindPopup(`
+                        <div style="text-align:center; min-width:180px;">
+                            <strong style="color:#ef4444; font-size:14px;">🔴 LIVE DRIVER LOCATION</strong><br>
+                            <b>${loc.busName || 'College Bus'}</b><br>
+                            <small class="text-muted">Driver: ${loc.driverName || 'Active Driver'}</small><br>
+                            <span class="badge" style="background:#ef4444; color:#fff; font-size:11px; margin-top:4px;">● Transmitting GPS</span>
+                        </div>
+                    `);
+
+                    const feedbackEl = document.getElementById('bus-live-feedback');
+                    if (feedbackEl) {
+                        feedbackEl.innerHTML = `
+                            <div class="p-2 mt-2 rounded border" style="background: #fef2f2; border-color: #fecaca !important;">
+                                <span class="badge" style="background:#ef4444; color:#fff;">● LIVE BUS</span> 
+                                <strong class="text-danger">Driver is actively broadcasting location!</strong><br>
+                                <small class="text-muted">${loc.busName || 'Campus Route 01'} (Driver: ${loc.driverName || 'Active'}) • ${formatTime(loc.updatedAt)}</small>
+                            </div>
+                        `;
+                    }
                 }
             } catch (err) {}
         }
@@ -631,7 +672,8 @@
             await loadStops();
             await loadCurrentAvailability();
             checkLiveBusLocation();
-            setInterval(checkLiveBusLocation, 15000);
+            // Poll for live driver location every 4 seconds
+            setInterval(checkLiveBusLocation, 4000);
 
             // Direct DOM event bindings for instant responsiveness
             document.getElementById('btn-choice-yes')?.addEventListener('click', () => setChoiceAndSave('YES'));

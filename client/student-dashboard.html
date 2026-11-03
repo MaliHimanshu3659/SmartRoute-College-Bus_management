@@ -65,6 +65,9 @@
                 </div>
             </div>
 
+            <!-- Live Bus Notification Banner -->
+            <div id="live-bus-banner" style="display:none;"></div>
+
             <!-- Stats Grid -->
             <div class="stats-grid">
                 <div class="stat-card">
@@ -211,6 +214,27 @@
                 document.getElementById('summary-present').textContent = data.presentCount;
                 document.getElementById('summary-absent').textContent = data.absentCount;
                 document.getElementById('summary-rate').textContent = `${data.attendanceRate}%`;
+
+                // Check if bus driver is sharing live location
+                try {
+                    const liveBus = await fetchApi('/driver/latest-location');
+                    const liveBanner = document.getElementById('live-bus-banner');
+                    if (liveBus && liveBus.live && liveBus.location) {
+                        if (liveBanner) {
+                            liveBanner.style.display = 'block';
+                            liveBanner.innerHTML = `
+                                <div class="alert alert-danger d-flex align-items-center justify-content-between py-2 mb-3 shadow-sm" style="border-left: 5px solid #ef4444;">
+                                    <div>
+                                        <strong style="color: #ef4444;">🔴 LIVE BUS ON ROUTE</strong>: <strong>${liveBus.location.busName || 'College Transit'}</strong> is actively transmitting live GPS coordinates!
+                                    </div>
+                                    <a href="availability.html" class="btn btn-sm btn-danger fw-bold">Track Live On Map &rarr;</a>
+                                </div>
+                            `;
+                        }
+                    } else if (liveBanner) {
+                        liveBanner.style.display = 'none';
+                    }
+                } catch (e) {}
 
                 // Set today's toggle & details
                 updateTodayCard(currentRecord);
