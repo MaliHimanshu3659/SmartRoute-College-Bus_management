@@ -22,3 +22,6 @@ instance/
 # OS / editor files
 .DS_Store
 Thumbs.db
+
+# Cached tiles
+server/data/tile_cache/

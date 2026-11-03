@@ -112,11 +112,11 @@ function logout(req, res) {
 }
 
 /**
- * Handle student registration
+ * Handle student and driver registration
  */
 async function register(req, res) {
     try {
-        const { username, password, email, fullName, enrollmentNumber } = req.body;
+        const { username, password, email, fullName, enrollmentNumber, role } = req.body;
 
         if (!username || !password) {
             return res.status(400).json({
@@ -139,6 +139,8 @@ async function register(req, res) {
             });
         }
 
+        const requestedRole = (role === 'driver') ? 'driver' : 'student';
+
         const existing = await query(
             `SELECT id FROM users WHERE username = ? OR (email IS NOT NULL AND email = ?)`,
             [username.trim(), email ? email.trim() : null]
@@ -153,26 +155,37 @@ async function register(req, res) {
 
         const passwordHash = await bcrypt.hash(password, 10);
 
-        // Security rule: Public registration ONLY creates student role
         const result = await query(
             `INSERT INTO users (username, email, password_hash, role, full_name, account_status)
-             VALUES (?, ?, ?, 'student', ?, 'active')`,
-            [username.trim(), email ? email.trim() : null, passwordHash, fullName || username.trim()]
+             VALUES (?, ?, ?, ?, ?, 'active')`,
+            [username.trim(), email ? email.trim() : null, passwordHash, requestedRole, fullName || username.trim()]
         );
 
         const newUserId = result.insertId;
 
-        // Create student profile record
-        await query(
-            `INSERT INTO student_profiles (user_id, enrollment_number) VALUES (?, ?)`,
-            [newUserId, enrollmentNumber || null]
-        );
-
-        recordAudit(newUserId, 'STUDENT_REGISTER', { username: username.trim() }, req.ip);
+        if (requestedRole === 'student') {
+            // Create student profile record
+            await query(
+                `INSERT INTO student_profiles (user_id, enrollment_number) VALUES (?, ?)`,
+                [newUserId, enrollmentNumber || null]
+            );
+            recordAudit(newUserId, 'STUDENT_REGISTER', { username: username.trim() }, req.ip);
+        } else if (requestedRole === 'driver') {
+            // Assign driver to default active campus route for today
+            const todayDate = new Date().toLocaleDateString('en-CA');
+            const activeRoute = await query(`SELECT id FROM routes WHERE is_active = 1 LIMIT 1`);
+            const routeId = activeRoute.length > 0 ? activeRoute[0].id : 1;
+            await query(
+                `INSERT INTO driver_assignments (driver_id, route_id, assigned_date, is_active)
+                 VALUES (?, ?, ?, 1)`,
+                [newUserId, routeId, todayDate]
+            );
+            recordAudit(newUserId, 'DRIVER_REGISTER', { username: username.trim(), routeId }, req.ip);
+        }
 
         return res.status(201).json({
             success: true,
-            message: 'Registration successful! You may now log in.'
+            message: `${requestedRole === 'driver' ? 'Driver' : 'Student'} account registered successfully! You may now sign in.`
         });
     } catch (err) {
         console.error('[Auth Controller] Register error:', err);
