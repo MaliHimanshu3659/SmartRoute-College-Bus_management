@@ -85,13 +85,18 @@ async function submitAvailability(req, res) {
                 }
             }
 
-            if (!validatedStopId && stopId) {
+            if (stopId !== undefined && stopId !== null) {
                 const stopMatch = allStops.find(s => s.id === parseInt(stopId, 10));
                 if (stopMatch) {
                     validatedStopId = stopMatch.id;
                     matchedStopName = stopMatch.stop_name;
                     finalLat = parseFloat(stopMatch.latitude);
                     finalLng = parseFloat(stopMatch.longitude);
+                } else {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'The selected bus stop was not found.'
+                    });
                 }
             }
 
