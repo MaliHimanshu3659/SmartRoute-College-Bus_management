@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartRoute — Smart College Bus Management & Attendance System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .landing-hero {
+            background: linear-gradient(135deg, var(--navy), var(--navy-mid));
+            color: var(--white);
+            padding: 5rem 0 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .landing-hero::before {
+            content: "";
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            border: 60px solid rgba(0, 201, 167, 0.06);
+            top: -120px;
+            right: -100px;
+        }
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+        }
+        .hero-title span {
+            color: var(--teal);
+        }
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: rgba(255, 255, 255, 0.8);
+            max-width: 580px;
+            margin: 1.5rem 0 2rem;
+        }
+        .feature-box {
+            background: var(--surface-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            height: 100%;
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+        .feature-box:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 1.25rem;
+        }
+        .navbar-custom {
+            background: var(--navy);
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <div class="sidebar-brand-icon">SR</div>
+                <span class="text-white font-display fw-bold fs-4">SmartRoute</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <a href="/login.html" class="btn btn-outline" style="border-color: rgba(255,255,255,0.2); color: white;">Sign In</a>
+                <a href="/signup.html" class="btn btn-teal">Student Registration</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="landing-hero">
+        <div class="container position-relative">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <span class="badge badge-teal mb-3">College Transit Optimization</span>
+                    <h1 class="hero-title">Smarter Buses,<br><span>Every Single Day.</span></h1>
+                    <p class="hero-subtitle">
+                        SmartRoute eliminates unnecessary college bus stops. Students mark their daily bus availability in the morning, drivers get clear route guidance on which stops to serve and which to skip, and attendance is verified with secure QR codes.
+                    </p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="/login.html" class="btn btn-teal btn-lg px-4">Open Web Portal</a>
+                        <a href="#how-it-works" class="btn btn-outline btn-lg px-4" style="border-color: rgba(255,255,255,0.3); color: white;">Explore Features</a>
+                    </div>
+                </div>
+                <div class="col-lg-5 d-none d-lg-block">
+                    <div class="card p-4 shadow-lg text-dark">
+                        <h4 class="font-display fw-bold mb-3" style="color: var(--navy);">Daily Impact Overview</h4>
+                        <div class="d-flex align-items-center justify-content-between p-3 mb-2 rounded bg-light">
+                            <div>
+                                <div class="text-muted small">Route Travel Time</div>
+                                <strong class="fs-5 text-success">Saved 18-25 Mins</strong>
+                            </div>
+                            <span class="badge badge-green">Optimized</span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between p-3 mb-2 rounded bg-light">
+                            <div>
+                                <div class="text-muted small">Unnecessary Stops</div>
+                                <strong class="fs-5 text-danger">Safely Skipped</strong>
+                            </div>
+                            <span class="badge badge-red">No Waiting</span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between p-3 rounded bg-light">
+                            <div>
+                                <div class="text-muted small">Boarding Attendance</div>
+                                <strong class="fs-5 text-primary">60s Dynamic QR</strong>
+                            </div>
+                            <span class="badge badge-teal">Secure</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Roles & Core Modules -->
+    <section class="py-5" id="how-it-works">
+        <div class="container py-4">
+            <div class="text-center mb-5">
+                <span class="badge badge-blue mb-2">Tailored Role Experiences</span>
+                <h2 class="font-display fw-bold" style="color: var(--navy);">Built for Students, Drivers, & Campus Admins</h2>
+                <p class="text-muted">A unified full-stack architecture replacing manual transit logs with real database intelligence.</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-box">
+                        <div class="feature-icon" style="background: var(--teal-bg); color: var(--teal-dim);">🎓</div>
+                        <h4 class="font-display fw-bold mb-2">Student Portal</h4>
+                        <p class="text-muted">Students declare daily bus usage with a single tap, choose designated pickup stops on an interactive map, and scan the driver's dynamic QR code upon boarding.</p>
+                        <a href="/login.html" class="text-primary fw-bold small text-decoration-none">Student Access &rarr;</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-box">
+                        <div class="feature-icon" style="background: var(--amber-bg); color: #d97706;">🚌</div>
+                        <h4 class="font-display fw-bold mb-2">Driver Guidance</h4>
+                        <p class="text-muted">Drivers view active stops with waiting student counts, know exactly which empty stops can be safely skipped, and display cryptographically generated 60-second QR codes.</p>
+                        <a href="/login.html" class="text-primary fw-bold small text-decoration-none">Driver Console &rarr;</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-box">
+                        <div class="feature-icon" style="background: rgba(13,31,60,0.08); color: var(--navy);">⚙️</div>
+                        <h4 class="font-display fw-bold mb-2">Admin Dashboard</h4>
+                        <p class="text-muted">Administrators manage college bus routes, pickup stops, student and driver accounts, and monitor comprehensive daily attendance logs and audit statistics.</p>
+                        <a href="/login.html" class="text-primary fw-bold small text-decoration-none">Admin Portal &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Stack Section -->
+    <section class="py-5 bg-white border-top border-bottom">
+        <div class="container py-3">
+            <div class="row align-items-center">
+                <div class="col-md-5">
+                    <span class="badge badge-amber mb-2">Web Development Stack</span>
+                    <h3 class="font-display fw-bold mb-3" style="color: var(--navy);">100% Course Compliant Architecture</h3>
+                    <p class="text-muted">Engineered strictly with HTML5, CSS3, JavaScript Fetch API, Bootstrap 5, Node.js, Express.js, and a normalized MySQL relational database.</p>
+                </div>
+                <div class="col-md-7">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded">
+                                <h6 class="fw-bold mb-1 text-primary">Frontend</h6>
+                                <small class="text-muted">HTML5, CSS3 Flexbox/Grid, Bootstrap 5, Fetch API (AJAX), Leaflet.js</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded">
+                                <h6 class="fw-bold mb-1 text-primary">Backend</h6>
+                                <small class="text-muted">Node.js, Express.js REST APIs, express-session, bcryptjs, helmet</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded">
+                                <h6 class="fw-bold mb-1 text-primary">Database</h6>
+                                <small class="text-muted">MySQL 8.0, InnoDB engine, foreign key constraints, connection pooling</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded">
+                                <h6 class="fw-bold mb-1 text-primary">Security</h6>
+                                <small class="text-muted">60s server-expired QR tokens, SHA-256 token hashing, role authorization</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-4 bg-light text-center border-top">
+        <div class="container">
+            <p class="text-muted mb-0 small">&copy; 2026 SmartRoute — Smart College Bus Management & Attendance System. Web Development Course Project.</p>
+        </div>
+    </footer>
+</body>
+</html>

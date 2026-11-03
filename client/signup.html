@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration — SmartRoute</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .signup-container {
+            max-width: 520px;
+            margin: 3rem auto;
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 2.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+    </style>
+</head>
+<body style="background: var(--surface);">
+    <div class="container">
+        <div class="signup-container">
+            <div class="text-center mb-4">
+                <div class="sidebar-brand-icon mx-auto mb-2">SR</div>
+                <h3 class="font-display fw-bold mb-1" style="color: var(--navy);">Student Registration</h3>
+                <p class="text-muted small">Create your student bus account to submit daily transit requests</p>
+            </div>
+
+            <div id="alert-container"></div>
+
+            <form id="signup-form">
+                <div class="row g-3">
+                    <div class="col-md-6 form-group">
+                        <label class="form-label">Username *</label>
+                        <input type="text" id="username" class="form-control" placeholder="e.g. rahul_s" required minlength="3">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" id="fullName" class="form-control" placeholder="e.g. Rahul Sharma" required>
+                    </div>
+                    <div class="col-md-12 form-group">
+                        <label class="form-label">College Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="rahul@student.edu">
+                    </div>
+                    <div class="col-md-12 form-group">
+                        <label class="form-label">Enrollment Number</label>
+                        <input type="text" id="enrollmentNumber" class="form-control" placeholder="e.g. 2024BTCS045">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="form-label">Password *</label>
+                        <input type="password" id="password" class="form-control" placeholder="Min 6 characters" required minlength="6">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="form-label">Confirm Password *</label>
+                        <input type="password" id="confirmPassword" class="form-control" placeholder="Re-type password" required minlength="6">
+                    </div>
+                </div>
+
+                <div class="form-check mt-3 mb-4">
+                    <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                    <label class="form-check-label text-muted small" for="termsCheck">
+                        I confirm that this account will be used for daily college bus attendance and route coordination.
+                    </label>
+                </div>
+
+                <button type="submit" id="submit-btn" class="btn btn-teal w-100 py-2 fw-bold font-display">
+                    Create Student Account
+                </button>
+            </form>
+
+            <div class="text-center mt-4 pt-3 border-top">
+                <span class="text-muted small">Already have an account? </span>
+                <a href="/login.html" class="text-primary fw-bold small text-decoration-none">Sign In Here</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submit-btn');
+            const username = document.getElementById('username').value.trim();
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const enrollmentNumber = document.getElementById('enrollmentNumber').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match.', 'danger');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Registering account...';
+
+            try {
+                const response = await fetchApi('/auth/register', {
+                    method: 'POST',
+                    body: {
+                        username,
+                        fullName,
+                        email: email || null,
+                        enrollmentNumber: enrollmentNumber || null,
+                        password
+                    }
+                });
+
+                if (response && response.success) {
+                    showAlert('Account created successfully! Redirecting to sign in...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 1200);
+                }
+            } catch (err) {
+                showAlert(err.message || 'Registration failed.', 'danger');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Student Account';
+            }
+        });
+    </script>
+</body>
+</html>

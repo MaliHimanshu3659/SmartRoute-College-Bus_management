@@ -1,8 +1,0 @@
-{
-  "$schema": "https://railway.com/railway.schema.json",
-  "deploy": {
-    "startCommand": "gunicorn run:flask_app",
-    "restartPolicyType": "on_failure",
-    "restartPolicyMaxRetries": 10
-  }
-}

@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrator Dashboard — SmartRoute</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .nav-tabs .nav-link {
+            color: var(--text-secondary);
+            font-weight: 600;
+            border: none;
+            padding: 10px 18px;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--teal-dim);
+            border-bottom: 2px solid var(--teal);
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-icon" style="background: var(--amber); color: var(--navy);">AD</div>
+                <div class="sidebar-brand-name">SmartRoute</div>
+            </div>
+
+            <div class="sidebar-section-label">Administrator</div>
+            <nav class="sidebar-nav">
+                <a class="nav-item active" href="admin-dashboard.html">
+                    <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+                    <span>System Administration</span>
+                </a>
+                <a class="nav-item" href="student-dashboard.html">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    <span>Student View</span>
+                </a>
+                <a class="nav-item" href="driver-dashboard.html">
+                    <svg viewBox="0 0 24 24"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg>
+                    <span>Driver View</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-user">
+                <div class="user-avatar" id="sidebar-user-avatar" style="border-color: var(--amber); color: var(--amber);">AD</div>
+                <div class="user-info">
+                    <div class="user-name" id="sidebar-user-name">Administrator</div>
+                    <span class="user-role-badge" id="sidebar-user-role" style="background: rgba(245,166,35,0.2); color: var(--amber);">Admin</span>
+                </div>
+                <button class="logout-btn" id="logout-btn" title="Sign Out">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div id="alert-container"></div>
+
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Campus Transit Administration</h1>
+                    <p class="page-subtitle">Centralized user control, bus route configuration, stop management, and attendance audit logs.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline" onclick="loadDashboardStats()">↻ Refresh Stats</button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Total Students</span>
+                        <div class="stat-icon teal">🎓</div>
+                    </div>
+                    <div class="stat-value" id="stat-total-students">0</div>
+                    <div class="stat-change good">Active registered riders</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Total Drivers</span>
+                        <div class="stat-icon amber">🚌</div>
+                    </div>
+                    <div class="stat-value" id="stat-total-drivers">0</div>
+                    <div class="stat-change">Assigned route operators</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Active Bus Stops</span>
+                        <div class="stat-icon navy">📍</div>
+                    </div>
+                    <div class="stat-value" id="stat-active-stops">0</div>
+                    <div class="stat-change">Configured transit stops</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Today's Attendance</span>
+                        <div class="stat-icon green">🎟️</div>
+                    </div>
+                    <div class="stat-value" id="stat-today-att">0</div>
+                    <div class="stat-change" id="stat-today-avail">0 YES / 0 NO today</div>
+                </div>
+            </div>
+
+            <!-- Administrative Module Tabs -->
+            <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-users" type="button">User Management</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-stops" type="button" onclick="loadStops()">Bus Stops</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-routes" type="button" onclick="loadRoutes()">Routes</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-attendance" type="button" onclick="loadAttendance()">Attendance Records</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-logs" type="button" onclick="loadLogs()">Audit Logs</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="adminTabsContent">
+                <!-- Tab 1: User Management -->
+                <div class="tab-pane fade show active" id="tab-users" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="card-title">System Users</span>
+                            <button class="btn btn-teal btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">+ Add New User</button>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Username</th>
+                                            <th>Full Name</th>
+                                            <th>Email</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="users-table-body">
+                                        <tr><td colspan="7" class="text-center py-4 text-muted">Loading users...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Bus Stops Management -->
+                <div class="tab-pane fade" id="tab-stops" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="card-title">Configured Bus Stops</span>
+                            <button class="btn btn-teal btn-sm" data-bs-toggle="modal" data-bs-target="#addStopModal">+ Add Bus Stop</button>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Stop Name</th>
+                                            <th>Latitude</th>
+                                            <th>Longitude</th>
+                                            <th>Scheduled Time</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="stops-table-body">
+                                        <tr><td colspan="7" class="text-center py-4 text-muted">Loading stops...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Route Management -->
+                <div class="tab-pane fade" id="tab-routes" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="card-title">Transit Routes</span>
+                            <button class="btn btn-teal btn-sm" data-bs-toggle="modal" data-bs-target="#addRouteModal">+ Create Route</button>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Route Name</th>
+                                            <th>Code</th>
+                                            <th>Bus Name</th>
+                                            <th>Description</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="routes-table-body">
+                                        <tr><td colspan="6" class="text-center py-4 text-muted">Loading routes...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Attendance Records -->
+                <div class="tab-pane fade" id="tab-attendance" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="card-title">Daily Attendance Logs</span>
+                            <div class="d-flex gap-2">
+                                <input type="date" id="att-filter-date" class="form-control form-control-sm" onchange="loadAttendance()">
+                                <button class="btn btn-outline btn-sm" onclick="clearAttFilter()">Clear Filter</button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Student</th>
+                                            <th>Enrollment</th>
+                                            <th>Date</th>
+                                            <th>Marked Time</th>
+                                            <th>Route / Bus</th>
+                                            <th>Designated Stop</th>
+                                            <th>Source</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="attendance-table-body">
+                                        <tr><td colspan="8" class="text-center py-4 text-muted">Loading attendance records...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 5: System Audit Logs -->
+                <div class="tab-pane fade" id="tab-logs" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Audit Trail & Security Logs</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Action</th>
+                                            <th>User</th>
+                                            <th>Details</th>
+                                            <th>IP Address</th>
+                                            <th>Timestamp</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="logs-table-body">
+                                        <tr><td colspan="6" class="text-center py-4 text-muted">Loading logs...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-display fw-bold">Add System User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="add-user-form">
+                    <div class="modal-body">
+                        <div class="form-group mb-2">
+                            <label class="form-label">Username *</label>
+                            <input type="text" id="new-username" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-2">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" id="new-fullname" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-2">
+                            <label class="form-label">Email</label>
+                            <input type="email" id="new-email" class="form-control">
+                        </div>
+                        <div class="form-group mb-2">
+                            <label class="form-label">Role *</label>
+                            <select id="new-role" class="form-control" required>
+                                <option value="student">Student</option>
+                                <option value="driver">Driver</option>
+                                <option value="admin">Administrator</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-2">
+                            <label class="form-label">Initial Password *</label>
+                            <input type="password" id="new-password" class="form-control" required minlength="6">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-teal">Create User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Stop Modal -->
+    <div class="modal fade" id="addStopModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-display fw-bold">Add Bus Stop</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="add-stop-form">
+                    <div class="modal-body">
+                        <div class="form-group mb-2">
+                            <label class="form-label">Stop Name *</label>
+                            <input type="text" id="new-stop-name" class="form-control" required placeholder="e.g. Chetak Circle">
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6 form-group">
+                                <label class="form-label">Latitude *</label>
+                                <input type="number" step="any" id="new-stop-lat" class="form-control" required placeholder="24.591111">
+                            </div>
+                            <div class="col-6 form-group">
+                                <label class="form-label">Longitude *</label>
+                                <input type="number" step="any" id="new-stop-lng" class="form-control" required placeholder="73.689986">
+                            </div>
+                        </div>
+                        <div class="form-group mb-2">
+                            <label class="form-label">Scheduled Pickup Time</label>
+                            <input type="text" id="new-stop-time" class="form-control" placeholder="08:20 AM">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-teal">Create Stop</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Route Modal -->
+    <div class="modal fade" id="addRouteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-display fw-bold">Create Transit Route</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="add-route-form">
+                    <div class="modal-body">
+                        <div class="form-group mb-2">
+                            <label class="form-label">Route Name *</label>
+                            <input type="text" id="new-route-name" class="form-control" required placeholder="Rampura to Campus">
+                        </div>
+                        <div class="form-group mb-2">
+                            <label class="form-label">Route Code *</label>
+                            <input type="text" id="new-route-code" class="form-control" required placeholder="ROUTE-02">
+                        </div>
+                        <div class="form-group mb-2">
+                            <label class="form-label">Bus Identifier</label>
+                            <input type="text" id="new-route-bus" class="form-control" placeholder="Campus Bus 02">
+                        </div>
+                        <div class="form-group mb-2">
+                            <label class="form-label">Description</label>
+                            <textarea id="new-route-desc" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-teal">Save Route</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        async function loadDashboardStats() {
+            try {
+                const res = await fetchApi('/admin/dashboard');
+                if (!res || !res.success) return;
+
+                const s = res.stats;
+                document.getElementById('stat-total-students').textContent = s.totalStudents;
+                document.getElementById('stat-total-drivers').textContent = s.totalDrivers;
+                document.getElementById('stat-active-stops').textContent = s.activeStops;
+                document.getElementById('stat-today-att').textContent = s.todayAttendance;
+                document.getElementById('stat-today-avail').textContent = `${s.todayYes} YES / ${s.todayNo} NO marked`;
+            } catch (err) {
+                showAlert('Failed to load admin stats: ' + err.message, 'danger');
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetchApi('/admin/users');
+                const tbody = document.getElementById('users-table-body');
+                if (!res || !res.users || res.users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">No users found.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = res.users.map(u => `
+                    <tr>
+                        <td>${u.id}</td>
+                        <td><strong>${u.username}</strong></td>
+                        <td>${u.full_name || '--'}</td>
+                        <td>${u.email || '--'}</td>
+                        <td><span class="badge ${u.role === 'admin' ? 'badge-amber' : (u.role === 'driver' ? 'badge-blue' : 'badge-teal')}">${u.role}</span></td>
+                        <td><span class="badge ${u.account_status === 'active' ? 'badge-green' : 'badge-red'}">${u.account_status}</span></td>
+                        <td>
+                            <button class="btn btn-sm ${u.account_status === 'active' ? 'btn-outline' : 'btn-teal'}" onclick="toggleUserStatus(${u.id}, '${u.account_status}')">
+                                ${u.account_status === 'active' ? 'Deactivate' : 'Activate'}
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function toggleUserStatus(userId, currentStatus) {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            try {
+                const res = await fetchApi(`/admin/users/${userId}/status`, {
+                    method: 'PATCH',
+                    body: { status: newStatus }
+                });
+                if (res && res.success) {
+                    showAlert(res.message, 'success');
+                    loadUsers();
+                    loadDashboardStats();
+                }
+            } catch (err) {
+                showAlert(err.message || 'Error updating status', 'danger');
+            }
+        }
+
+        async function loadStops() {
+            try {
+                const res = await fetchApi('/admin/stops');
+                const tbody = document.getElementById('stops-table-body');
+                if (!res || !res.stops || res.stops.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">No stops found.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = res.stops.map(s => `
+                    <tr>
+                        <td>${s.id}</td>
+                        <td><strong>${s.stop_name}</strong></td>
+                        <td>${s.latitude}</td>
+                        <td>${s.longitude}</td>
+                        <td>${s.scheduled_time || 'N/A'}</td>
+                        <td><span class="badge ${s.is_active ? 'badge-green' : 'badge-red'}">${s.is_active ? 'Active' : 'Disabled'}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline" onclick="toggleStopStatus(${s.id}, ${s.is_active})">
+                                ${s.is_active ? 'Disable' : 'Enable'}
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function toggleStopStatus(stopId, currentActive) {
+            try {
+                const res = await fetchApi(`/admin/stops/${stopId}`, {
+                    method: 'PUT',
+                    body: { isActive: !currentActive }
+                });
+                if (res && res.success) {
+                    showAlert(res.message, 'success');
+                    loadStops();
+                    loadDashboardStats();
+                }
+            } catch (err) {
+                showAlert(err.message || 'Error updating stop', 'danger');
+            }
+        }
+
+        async function loadRoutes() {
+            try {
+                const res = await fetchApi('/admin/routes');
+                const tbody = document.getElementById('routes-table-body');
+                if (!res || !res.routes || res.routes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">No routes found.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = res.routes.map(r => `
+                    <tr>
+                        <td>${r.id}</td>
+                        <td><strong>${r.route_name}</strong></td>
+                        <td><span class="badge badge-blue">${r.route_code}</span></td>
+                        <td>${r.bus_name}</td>
+                        <td><small class="text-muted">${r.description || '--'}</small></td>
+                        <td><span class="badge ${r.is_active ? 'badge-green' : 'badge-red'}">${r.is_active ? 'Active' : 'Disabled'}</span></td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadAttendance() {
+            const dateInput = document.getElementById('att-filter-date').value;
+            const query = dateInput ? `?date=${dateInput}` : '';
+            try {
+                const res = await fetchApi(`/admin/attendance${query}`);
+                const tbody = document.getElementById('attendance-table-body');
+                if (!res || !res.records || res.records.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-3 text-muted">No attendance logs found for this date.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = res.records.map(a => `
+                    <tr>
+                        <td>${a.id}</td>
+                        <td><strong>${a.student_name || a.username}</strong></td>
+                        <td>${a.enrollment_number || '--'}</td>
+                        <td>${formatDate(a.attendance_date)}</td>
+                        <td>${formatTime(a.marked_at)}</td>
+                        <td>${a.route_name || 'Campus Route'}</td>
+                        <td>${a.stop_name || 'Designated Stop'}</td>
+                        <td><span class="badge badge-green">${a.source}</span></td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function clearAttFilter() {
+            document.getElementById('att-filter-date').value = '';
+            loadAttendance();
+        }
+
+        async function loadLogs() {
+            try {
+                const res = await fetchApi('/admin/logs');
+                const tbody = document.getElementById('logs-table-body');
+                if (!res || !res.logs || res.logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">No audit logs available.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = res.logs.map(l => `
+                    <tr>
+                        <td>${l.id}</td>
+                        <td><strong>${l.action}</strong></td>
+                        <td>${l.username || 'System'} (${l.role || '--'})</td>
+                        <td><small class="text-muted">${l.details || '--'}</small></td>
+                        <td>${l.ip_address || '127.0.0.1'}</td>
+                        <td>${new Date(l.created_at).toLocaleString()}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Add User Form
+        document.getElementById('add-user-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const body = {
+                    username: document.getElementById('new-username').value.trim(),
+                    fullName: document.getElementById('new-fullname').value.trim(),
+                    email: document.getElementById('new-email').value.trim() || null,
+                    role: document.getElementById('new-role').value,
+                    password: document.getElementById('new-password').value
+                };
+                const res = await fetchApi('/admin/users', { method: 'POST', body });
+                if (res && res.success) {
+                    showAlert('User created successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+                    document.getElementById('add-user-form').reset();
+                    loadUsers();
+                    loadDashboardStats();
+                }
+            } catch (err) {
+                showAlert(err.message || 'Error creating user', 'danger');
+            }
+        });
+
+        // Add Stop Form
+        document.getElementById('add-stop-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const body = {
+                    stopName: document.getElementById('new-stop-name').value.trim(),
+                    latitude: document.getElementById('new-stop-lat').value,
+                    longitude: document.getElementById('new-stop-lng').value,
+                    scheduledTime: document.getElementById('new-stop-time').value.trim() || null
+                };
+                const res = await fetchApi('/admin/stops', { method: 'POST', body });
+                if (res && res.success) {
+                    showAlert('Stop created successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('addStopModal')).hide();
+                    document.getElementById('add-stop-form').reset();
+                    loadStops();
+                    loadDashboardStats();
+                }
+            } catch (err) {
+                showAlert(err.message || 'Error creating stop', 'danger');
+            }
+        });
+
+        // Add Route Form
+        document.getElementById('add-route-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const body = {
+                    routeName: document.getElementById('new-route-name').value.trim(),
+                    routeCode: document.getElementById('new-route-code').value.trim(),
+                    busName: document.getElementById('new-route-bus').value.trim(),
+                    description: document.getElementById('new-route-desc').value.trim() || null
+                };
+                const res = await fetchApi('/admin/routes', { method: 'POST', body });
+                if (res && res.success) {
+                    showAlert('Route created successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('addRouteModal')).hide();
+                    document.getElementById('add-route-form').reset();
+                    loadRoutes();
+                    loadDashboardStats();
+                }
+            } catch (err) {
+                showAlert(err.message || 'Error creating route', 'danger');
+            }
+        });
+
+        (async () => {
+            await checkAuth('admin');
+            await loadDashboardStats();
+            await loadUsers();
+        })();
+    </script>
+</body>
+</html>

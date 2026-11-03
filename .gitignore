@@ -1,29 +1,23 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-
-# Virtual environments
-.venv/
-venv/
-
-# Local app data
-instance/*.db
-instance/*.sqlite3
-instance/*.sqlite3-*
-instance/*.sql
-
 # Environment files
 .env
 .env.*
+!.env.example
 
 # Node / frontend dependencies
 node_modules/
 Map/node_modules/
+
+# Local databases & logs
+mysql_data/
+*.log
+npm-debug.log*
+
+# Python legacy
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+instance/
 
 # OS / editor files
 .DS_Store

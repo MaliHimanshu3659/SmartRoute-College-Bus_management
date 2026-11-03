@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In — SmartRoute</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .login-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+        .login-left {
+            flex: 1;
+            background: linear-gradient(135deg, var(--navy), var(--navy-mid));
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            color: var(--white);
+        }
+        .login-left::before {
+            content: "";
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            border: 60px solid rgba(0, 201, 167, 0.08);
+            top: -90px;
+            left: -90px;
+        }
+        .login-right {
+            width: 480px;
+            background: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2.5rem;
+        }
+        .login-form-wrapper {
+            width: 100%;
+            max-width: 380px;
+        }
+        .role-pill-group {
+            display: flex;
+            background: var(--surface);
+            border-radius: var(--radius-sm);
+            padding: 4px;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+        .role-pill-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .role-pill-btn.active {
+            background: var(--white);
+            color: var(--navy);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        @media (max-width: 900px) {
+            .login-shell { flex-direction: column; }
+            .login-right { width: 100%; padding: 2.5rem 1.5rem; }
+            .login-left { padding: 3rem 1.5rem; min-height: 250px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-shell">
+        <div class="login-left">
+            <div class="d-flex align-items-center gap-3 mb-5 position-relative">
+                <div class="sidebar-brand-icon">SR</div>
+                <span class="brand-name fs-3 fw-bold font-display text-white">SmartRoute</span>
+            </div>
+            <h1 class="font-display fw-bold display-5 mb-3 position-relative" style="line-height: 1.2;">
+                Smarter Buses,<br><span style="color: var(--teal);">Every Single Day.</span>
+            </h1>
+            <p class="text-white-50 fs-6 mb-4 position-relative" style="max-width: 380px;">
+                Log in to declare daily transit availability, access driver route guidance, or monitor college attendance.
+            </p>
+            <div class="d-flex flex-column gap-2 position-relative">
+                <div class="d-flex align-items-center gap-2 text-white-50 small">
+                    <span class="badge-dot" style="background: var(--teal);"></span>
+                    Daily morning availability in under 10 seconds
+                </div>
+                <div class="d-flex align-items-center gap-2 text-white-50 small">
+                    <span class="badge-dot" style="background: var(--teal);"></span>
+                    Real-time route guidance based on student response
+                </div>
+                <div class="d-flex align-items-center gap-2 text-white-50 small">
+                    <span class="badge-dot" style="background: var(--teal);"></span>
+                    Cryptographic 60-second QR boarding attendance
+                </div>
+            </div>
+        </div>
+
+        <div class="login-right">
+            <div class="login-form-wrapper">
+                <h2 class="font-display fw-bold mb-1" style="color: var(--navy);">Sign In</h2>
+                <p class="text-muted small mb-4">Choose your role and enter credentials to continue</p>
+
+                <!-- Role Switcher -->
+                <div class="role-pill-group" id="role-selector">
+                    <button type="button" class="role-pill-btn active" data-role="student">Student</button>
+                    <button type="button" class="role-pill-btn" data-role="driver">Driver</button>
+                    <button type="button" class="role-pill-btn" data-role="admin">Admin</button>
+                </div>
+
+                <div id="alert-container"></div>
+
+                <form id="login-form">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" id="username" class="form-control" placeholder="Enter your username" required autofocus>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="form-label d-flex justify-content-between">
+                            <span>Password</span>
+                            <small class="text-muted" style="cursor: pointer;" id="toggle-password">Show</small>
+                        </label>
+                        <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="btn btn-teal w-100 py-2 fw-bold font-display">
+                        Sign In to SmartRoute
+                    </button>
+                </form>
+
+                <!-- Demo quick-fill helpers -->
+                <div class="mt-4 pt-3 border-top text-center">
+                    <span class="text-muted small d-block mb-2">Quick Demo Accounts (Password: <code>password123</code>):</span>
+                    <div class="d-flex gap-1 justify-content-center flex-wrap">
+                        <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('student1', 'student')">Student 1</button>
+                        <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('driver1', 'driver')">Driver</button>
+                        <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('admin', 'admin')">Admin</button>
+                    </div>
+                </div>
+
+                <div class="text-center mt-3">
+                    <span class="text-muted small">New student? </span>
+                    <a href="/signup.html" class="text-primary fw-bold small text-decoration-none">Create an Account</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let selectedRole = 'student';
+
+        // Role tab switching
+        document.querySelectorAll('.role-pill-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.role-pill-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedRole = btn.getAttribute('data-role');
+            });
+        });
+
+        // Password visibility toggle
+        const togglePassword = document.getElementById('toggle-password');
+        const passwordInput = document.getElementById('password');
+        togglePassword.addEventListener('click', () => {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                togglePassword.textContent = 'Hide';
+            } else {
+                passwordInput.type = 'password';
+                togglePassword.textContent = 'Show';
+            }
+        });
+
+        // Quick demo filler
+        function fillDemo(username, role) {
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = 'password123';
+            document.querySelector(`.role-pill-btn[data-role="${role}"]`).click();
+        }
+
+        // Form submission with Fetch API
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submit-btn');
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showAlert('Username and password are required.', 'danger');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Verifying credentials...';
+
+            try {
+                const response = await fetchApi('/auth/login', {
+                    method: 'POST',
+                    body: {
+                        username,
+                        password,
+                        role: selectedRole
+                    }
+                });
+
+                if (response && response.success) {
+                    showAlert('Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        redirectToDashboard(response.user.role);
+                    }, 500);
+                }
+            } catch (err) {
+                showAlert(err.message || 'Login failed. Please check your credentials.', 'danger');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In to SmartRoute';
+            }
+        });
+
+        // Check if already authenticated
+        checkAuth();
+    </script>
+</body>
+</html>
