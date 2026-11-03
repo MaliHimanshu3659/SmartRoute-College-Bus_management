@@ -79,3 +79,4 @@
    - Forged or expired tokens return `400 Bad Request`.
    - Repeated scans on the same calendar day return `409 Conflict`.
    - Attendance timestamps are server-generated (`CURRENT_TIMESTAMP`).
+

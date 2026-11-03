@@ -10,3 +10,4 @@ router.post('/register', authController.register);
 router.get('/me', authController.getMe);
 
 module.exports = router;
+

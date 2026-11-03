@@ -115,3 +115,4 @@ flowchart TD
    - Session date matches today.
    - Student has not already marked attendance today (`uq_student_daily_attendance` constraint).
 8. If valid, an attendance record is created with a server-generated timestamp.
+

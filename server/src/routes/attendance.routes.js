@@ -8,7 +8,9 @@ router.use(requireAuth);
 
 router.post('/sessions', requireRole('driver', 'admin'), attendanceController.createAttendanceSession);
 router.get('/sessions/active', requireRole('driver', 'admin'), attendanceController.getActiveSession);
+router.get('/live-token', requireRole('student', 'driver', 'admin'), attendanceController.getActiveLiveToken);
 router.post('/scan', scanLimiter, requireRole('student', 'admin'), attendanceController.scanAttendance);
 router.get('/history', requireRole('student', 'admin'), attendanceController.getStudentAttendanceHistory);
 
 module.exports = router;
+

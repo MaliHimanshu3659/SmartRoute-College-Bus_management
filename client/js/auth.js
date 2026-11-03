@@ -42,8 +42,6 @@ async function checkAuth(requiredRole = null) {
 function redirectToDashboard(role) {
     if (role === 'driver') {
         window.location.href = '/driver-dashboard.html';
-    } else if (role === 'admin') {
-        window.location.href = '/admin-dashboard.html';
     } else {
         window.location.href = '/student-dashboard.html';
     }
@@ -86,3 +84,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+

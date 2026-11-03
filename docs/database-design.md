@@ -208,3 +208,4 @@ Stores verified student boarding attendance entries.
    - Indexes on foreign keys and frequently queried fields: `idx_user_role`, `idx_avail_date`, `idx_session_token_hash`, `idx_session_expires`, `idx_att_date`.
 3. **Parameterization**:
    - Every database interaction is executed using prepared statements (`mysql2/promise` pool), mitigating 100% of SQL injection vulnerabilities.
+

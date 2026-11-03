@@ -6,7 +6,7 @@ const { query } = require('../config/database');
 async function getDriverDashboard(req, res) {
     try {
         const driverId = req.session.user.id;
-        const todayDate = new Date().toISOString().split('T')[0];
+        const todayDate = new Date().toLocaleDateString('en-CA');
 
         // 1. Get driver's assigned route or default route
         const assignments = await query(
@@ -94,24 +94,24 @@ async function getDriverDashboard(req, res) {
         const scansSummary = await query(
             `SELECT COUNT(*) as scanned_count 
              FROM attendance_records 
-             WHERE attendance_date = ? AND route_id = ?`,
-            [todayDate, route.id]
+             WHERE attendance_date = ?`,
+            [todayDate]
         );
         const qrScanned = parseInt(scansSummary[0]?.scanned_count || '0', 10);
         const pendingScans = Math.max(activeRiders - qrScanned, 0);
         const scanProgressPercent = activeRiders > 0 ? Math.round((qrScanned / activeRiders) * 100) : 0;
 
-        // 7. Get today's active riders list
+        // 7. Get today's riders list - both YES and NO
         const ridersList = await query(
             `SELECT u.username, u.full_name, p.enrollment_number, s.stop_name,
-                    a.latitude, a.longitude, att.id as attendance_id, att.marked_at
+                    a.use_bus, a.latitude, a.longitude, att.id as attendance_id, att.marked_at
              FROM student_availability a
              JOIN users u ON a.student_id = u.id
              LEFT JOIN student_profiles p ON u.id = p.user_id
              LEFT JOIN bus_stops s ON a.bus_stop_id = s.id
              LEFT JOIN attendance_records att ON att.student_id = a.student_id AND att.attendance_date = a.availability_date
-             WHERE a.availability_date = ? AND a.use_bus = 'YES'
-             ORDER BY u.username ASC`,
+             WHERE a.availability_date = ?
+             ORDER BY (a.use_bus = 'YES') DESC, u.username ASC`,
             [todayDate]
         );
 
@@ -144,7 +144,8 @@ async function getDriverDashboard(req, res) {
                 username: r.username,
                 displayName: r.full_name || r.username,
                 enrollment: r.enrollment_number || 'N/A',
-                stopName: r.stop_name || 'Stop not selected',
+                useBus: r.use_bus,
+                stopName: r.use_bus === 'YES' ? (r.stop_name || 'Designated Stop') : 'Marked Not Coming (Skip)',
                 latitude: r.latitude ? parseFloat(r.latitude) : null,
                 longitude: r.longitude ? parseFloat(r.longitude) : null,
                 isScanned: Boolean(r.attendance_id),
@@ -162,7 +163,7 @@ async function getDriverDashboard(req, res) {
  */
 async function getDriverAvailability(req, res) {
     try {
-        const todayDate = new Date().toISOString().split('T')[0];
+        const todayDate = new Date().toLocaleDateString('en-CA');
         const records = await query(
             `SELECT u.username, u.full_name, a.use_bus, a.latitude, a.longitude, s.stop_name, att.marked_at
              FROM student_availability a
@@ -263,3 +264,4 @@ module.exports = {
     updateBusLocation,
     getLatestBusLocation
 };
+

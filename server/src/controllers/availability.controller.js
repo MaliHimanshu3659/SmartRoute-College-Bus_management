@@ -7,7 +7,7 @@ const { findNearestStop } = require('../utils/geo.utils');
 async function getMyAvailability(req, res) {
     try {
         const studentId = req.session.user.id;
-        const todayDate = new Date().toISOString().split('T')[0];
+        const todayDate = new Date().toLocaleDateString('en-CA');
 
         // 1. Today's availability
         const todayRecords = await query(
@@ -60,48 +60,70 @@ async function submitAvailability(req, res) {
             });
         }
 
-        const todayDate = new Date().toISOString().split('T')[0];
+        const todayDate = new Date().toLocaleDateString('en-CA');
         let validatedStopId = null;
         let finalLat = null;
         let finalLng = null;
         let matchedStopName = null;
 
         if (normalizedUseBus === 'YES') {
-            const allStops = await query(`SELECT * FROM bus_stops WHERE is_active = 1`);
+            const allStops = await query(`SELECT * FROM bus_stops WHERE is_active = 1 ORDER BY id ASC`);
 
             if (latitude != null && longitude != null) {
                 const latNum = parseFloat(latitude);
                 const lngNum = parseFloat(longitude);
-                if (isNaN(latNum) || isNaN(lngNum)) {
-                    return res.status(400).json({ success: false, message: 'Coordinates must be valid numbers.' });
-                }
-                finalLat = latNum;
-                finalLng = lngNum;
+                if (!isNaN(latNum) && !isNaN(lngNum)) {
+                    finalLat = latNum;
+                    finalLng = lngNum;
 
-                // Match to nearest bus stop
-                const nearest = findNearestStop(latNum, lngNum, allStops);
-                if (nearest) {
-                    validatedStopId = nearest.id;
-                    matchedStopName = nearest.stop_name;
+                    // Match to nearest bus stop
+                    const nearest = findNearestStop(latNum, lngNum, allStops);
+                    if (nearest) {
+                        validatedStopId = nearest.id;
+                        matchedStopName = nearest.stop_name;
+                    }
                 }
             }
 
-            if (!validatedStopId && stopId) {
+            if (!validatedStopId && stopId !== undefined && stopId !== null) {
                 const stopMatch = allStops.find(s => s.id === parseInt(stopId, 10));
-                if (!stopMatch) {
-                    return res.status(400).json({ success: false, message: 'Selected pickup stop does not exist.' });
+                if (stopMatch) {
+                    validatedStopId = stopMatch.id;
+                    matchedStopName = stopMatch.stop_name;
+                    finalLat = parseFloat(stopMatch.latitude);
+                    finalLng = parseFloat(stopMatch.longitude);
+                } else {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'The selected bus stop was not found.'
+                    });
                 }
-                validatedStopId = stopMatch.id;
-                matchedStopName = stopMatch.stop_name;
-                finalLat = parseFloat(stopMatch.latitude);
-                finalLng = parseFloat(stopMatch.longitude);
             }
 
+            // Fallback: If no stop provided, pick student's recent stop or the first route stop
             if (!validatedStopId) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Please select a designated pickup stop or choose a location on the map.'
-                });
+                const prevRecord = await query(
+                    `SELECT bus_stop_id FROM student_availability 
+                     WHERE student_id = ? AND bus_stop_id IS NOT NULL 
+                     ORDER BY availability_date DESC LIMIT 1`,
+                    [studentId]
+                );
+                if (prevRecord.length > 0 && prevRecord[0].bus_stop_id) {
+                    const stopMatch = allStops.find(s => s.id === prevRecord[0].bus_stop_id);
+                    if (stopMatch) {
+                        validatedStopId = stopMatch.id;
+                        matchedStopName = stopMatch.stop_name;
+                        finalLat = parseFloat(stopMatch.latitude);
+                        finalLng = parseFloat(stopMatch.longitude);
+                    }
+                }
+            }
+
+            if (!validatedStopId && allStops.length > 0) {
+                validatedStopId = allStops[0].id;
+                matchedStopName = allStops[0].stop_name;
+                finalLat = parseFloat(allStops[0].latitude);
+                finalLng = parseFloat(allStops[0].longitude);
             }
         }
 
@@ -146,7 +168,7 @@ async function getDashboardStats(req, res) {
     try {
         const studentId = req.session.user.id;
         const now = new Date();
-        const todayDate = now.toISOString().split('T')[0];
+        const todayDate = now.toLocaleDateString('en-CA');
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth() + 1;
 
@@ -196,11 +218,13 @@ async function getDashboardStats(req, res) {
         for (let i = 0; i < 5; i++) {
             const dayDate = new Date(monday);
             dayDate.setDate(monday.getDate() + i);
-            const iso = dayDate.toISOString().split('T')[0];
+            const iso = dayDate.toLocaleDateString('en-CA');
             const isToday = iso === todayDate;
 
             const rec = monthRecords.find(r => {
-                const rIso = new Date(r.availability_date).toISOString().split('T')[0];
+                const rIso = typeof r.availability_date === 'string' 
+                    ? r.availability_date.split('T')[0].split(' ')[0] 
+                    : new Date(r.availability_date).toLocaleDateString('en-CA');
                 return rIso === iso;
             });
 
@@ -328,3 +352,4 @@ module.exports = {
     getProfile,
     updateProfile
 };
+

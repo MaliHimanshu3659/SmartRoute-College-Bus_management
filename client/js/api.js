@@ -106,3 +106,4 @@ function formatTime(dateInput) {
         minute: '2-digit'
     });
 }
+

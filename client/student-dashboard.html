@@ -311,8 +311,11 @@
         // Initialize authentication and load page
         (async () => {
             await checkAuth('student');
-            loadDashboard();
+            await loadDashboard();
+            // Auto refresh stats every 10 seconds for real-time sync with driver
+            setInterval(loadDashboard, 10000);
         })();
     </script>
 </body>
 </html>
+

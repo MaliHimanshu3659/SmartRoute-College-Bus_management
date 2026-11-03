@@ -93,3 +93,4 @@ test('Authentication Module Tests', async (t) => {
         assert.equal(res.body.success, false);
     });
 });
+

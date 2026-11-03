@@ -117,3 +117,4 @@ Passwords are never stored in plaintext. When a user registers or is created by 
   1. Dedicated onboard IoT hardware (ESP32/Raspberry Pi with GPS module) for continuous vehicle tracking.
   2. Push notifications / SMS alerts via Firebase Cloud Messaging (FCM) when the bus is 2 stops away.
   3. Machine learning predictive model to forecast student absence based on weather, day of the week, and past attendance trends.
+

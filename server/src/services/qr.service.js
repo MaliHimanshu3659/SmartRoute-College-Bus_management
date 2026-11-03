@@ -12,10 +12,7 @@ function hashToken(token) {
 }
 
 function getLocalDateString(d = new Date()) {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return d.toLocaleDateString('en-CA');
 }
 
 /**
@@ -38,12 +35,12 @@ async function generateAttendanceSession(driverId, routeId) {
         [driverId, todayDate]
     );
 
-    // Insert new session record
+    // Insert new session record including raw_token for seamless verification
     const result = await query(
         `INSERT INTO attendance_sessions 
-         (driver_id, route_id, session_date, token_hash, expires_at, is_revoked) 
-         VALUES (?, ?, ?, ?, ?, 0)`,
-        [driverId, routeId, todayDate, tokenHash, expiresAt]
+         (driver_id, route_id, session_date, token_hash, raw_token, expires_at, is_revoked) 
+         VALUES (?, ?, ?, ?, ?, ?, 0)`,
+        [driverId, routeId, todayDate, tokenHash, rawToken, expiresAt]
     );
 
     // Generate QR code data URL containing JSON payload with token

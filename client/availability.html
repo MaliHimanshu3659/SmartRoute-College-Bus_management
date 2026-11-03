@@ -10,6 +10,7 @@
     <style>
         #map {
             height: 440px;
+            width: 100%;
         }
         #qr-reader {
             width: 100%;
@@ -22,14 +23,14 @@
 </head>
 <body>
     <div class="app-layout">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar Navigation (Student Only) -->
         <aside class="sidebar">
             <div class="sidebar-brand">
                 <div class="sidebar-brand-icon">SR</div>
                 <div class="sidebar-brand-name">SmartRoute</div>
             </div>
 
-            <div class="sidebar-section-label">Student Menu</div>
+            <div class="sidebar-section-label">Student Navigation</div>
             <nav class="sidebar-nav">
                 <a class="nav-item" href="student-dashboard.html">
                     <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
@@ -88,16 +89,16 @@
                         <div class="mb-4">
                             <label class="form-label">Will you take the college bus today?</label>
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-teal flex-fill" id="btn-choice-yes" onclick="setChoice('YES')">
+                                <button type="button" class="btn btn-teal flex-fill py-2 fw-bold" id="btn-choice-yes" onclick="setChoiceAndSave('YES')">
                                     ✓ Taking the Bus (YES)
                                 </button>
-                                <button type="button" class="btn btn-outline flex-fill" id="btn-choice-no" onclick="setChoice('NO')">
+                                <button type="button" class="btn btn-outline flex-fill py-2 fw-bold" id="btn-choice-no" onclick="setChoiceAndSave('NO')">
                                     ✗ Not Coming (NO)
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Stop Selection Area (Hidden if NO) -->
+                        <!-- Stop Selection Area -->
                         <div id="stop-selection-area">
                             <div class="form-group mb-3">
                                 <label class="form-label" for="stop-dropdown">Select Your Pickup Stop</label>
@@ -141,18 +142,27 @@
                 <div class="card">
                     <div class="card-header">
                         <span class="card-title">Scan Driver Boarding QR Code</span>
-                        <span class="badge badge-blue">Camera Verification</span>
+                        <span class="badge badge-blue">Boarding Scan</span>
                     </div>
                     <div class="card-body">
                         <p class="text-muted small mb-3">
-                            When boarding the college bus, click below to activate your device camera and scan the driver's dynamic 60-second QR code.
+                            When boarding the bus, scan the driver's live 60-second QR code to mark your attendance.
                         </p>
 
-                        <div class="d-flex gap-2 mb-3">
-                            <button type="button" class="btn btn-teal" id="start-scan-btn" onclick="startScanner()">
-                                📷 Start Camera Scanner
+                        <!-- Fast One-Click Scan for Testing on Same Device -->
+                        <div class="mb-3 p-3 bg-light rounded border text-center">
+                            <button type="button" class="btn btn-teal w-100 py-2 fw-bold font-display" onclick="oneClickScanLiveToken()">
+                                ⚡ Instant Boarding Scan (Scan Driver's Live Code)
                             </button>
-                            <button type="button" class="btn btn-outline" id="stop-scan-btn" onclick="stopScanner()" style="display:none;">
+                            <small class="text-muted d-block mt-2">Connects directly to driver's live QR code session.</small>
+                        </div>
+
+                        <!-- Camera Scanner -->
+                        <div class="d-flex gap-2 mb-3">
+                            <button type="button" class="btn btn-outline flex-fill" id="start-scan-btn" onclick="startScanner()">
+                                📷 Open Camera Scanner
+                            </button>
+                            <button type="button" class="btn btn-danger flex-fill" id="stop-scan-btn" onclick="stopScanner()" style="display:none;">
                                 Stop Camera
                             </button>
                         </div>
@@ -175,7 +185,7 @@
                 <div class="card">
                     <div class="card-header">
                         <span class="card-title">Today's Attendance Status</span>
-                        <span class="badge badge-green" id="today-att-badge">Verified Records</span>
+                        <span class="badge badge-green" id="today-att-badge">Status</span>
                     </div>
                     <div class="card-body">
                         <div class="p-3 bg-light rounded mb-3">
@@ -198,7 +208,7 @@
                         </div>
 
                         <div class="alert alert-info py-2 small mb-0">
-                            <strong>Security Note:</strong> QR codes are single-use tokens valid for only 60 seconds on the server. Attendance records are generated with server-side timestamps.
+                            <strong>Security Note:</strong> QR codes are valid for 60 seconds on the server. Attendance records are locked with server timestamps.
                         </div>
                     </div>
                 </div>
@@ -207,7 +217,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script>
@@ -220,13 +230,18 @@
         let selectedChoice = 'YES';
         let html5QrScanner = null;
 
-        // Initialize Map
+        // Initialize Map with CartoDB Voyager tiles (100% reliable, no OSM 403 blocks!)
         function initMap() {
-            // Default center around Udaipur
             map = L.map('map').setView([24.5883, 73.7125], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
             }).addTo(map);
+
+            setTimeout(() => {
+                if (map) map.invalidateSize();
+            }, 300);
 
             map.on('click', (e) => {
                 if (selectedChoice !== 'YES') return;
@@ -301,6 +316,7 @@
                 setUserLocation(parseFloat(stop.latitude), parseFloat(stop.longitude), stop.stop_name);
                 document.getElementById('selected-stop-feedback').innerHTML = 
                     `Selected <strong>${stop.stop_name}</strong>. Scheduled time: <strong>${stop.scheduled_time}</strong>.`;
+                saveAvailability();
             }
         }
 
@@ -336,6 +352,7 @@
                 document.getElementById('stop-dropdown').value = nearest.id;
                 document.getElementById('selected-stop-feedback').innerHTML = 
                     `Nearest stop matched: <strong>${nearest.stop_name}</strong> (${nearest.scheduled_time}). Click Save to confirm.`;
+                saveAvailability();
             }
         }
 
@@ -360,7 +377,7 @@
             );
         }
 
-        function setChoice(choice) {
+        function setChoiceAndSave(choice) {
             selectedChoice = choice;
             const yesBtn = document.getElementById('btn-choice-yes');
             const noBtn = document.getElementById('btn-choice-no');
@@ -368,26 +385,32 @@
             const statusPill = document.getElementById('status-pill');
 
             if (choice === 'YES') {
-                yesBtn.className = 'btn btn-teal flex-fill';
-                noBtn.className = 'btn btn-outline flex-fill';
+                if (!selectedStopId && allStops.length > 0) {
+                    selectedStopId = allStops[0].id;
+                    const dropdown = document.getElementById('stop-dropdown');
+                    if (dropdown) dropdown.value = selectedStopId;
+                }
+                yesBtn.className = 'btn btn-teal flex-fill py-2 fw-bold';
+                noBtn.className = 'btn btn-outline flex-fill py-2 fw-bold';
                 stopArea.style.display = 'block';
                 statusPill.className = 'badge badge-teal';
                 statusPill.textContent = 'Taking Bus';
             } else {
-                yesBtn.className = 'btn btn-outline flex-fill';
-                noBtn.className = 'btn btn-danger flex-fill';
+                yesBtn.className = 'btn btn-outline flex-fill py-2 fw-bold';
+                noBtn.className = 'btn btn-danger flex-fill py-2 fw-bold';
                 stopArea.style.display = 'none';
                 statusPill.className = 'badge badge-red';
                 statusPill.textContent = 'Not Coming';
-                saveAvailability(); // Save immediately when marking NO
             }
+
+            saveAvailability();
         }
 
         async function saveAvailability() {
             try {
                 const body = {
                     useBus: selectedChoice,
-                    stopId: selectedChoice === 'YES' ? selectedStopId : null
+                    stopId: selectedChoice === 'YES' ? (selectedStopId || null) : null
                 };
 
                 if (userMarker && selectedChoice === 'YES') {
@@ -403,6 +426,10 @@
 
                 if (res && res.success) {
                     showAlert(res.message, 'success');
+                    if (res.data && res.data.stopId) {
+                        selectedStopId = res.data.stopId;
+                        document.getElementById('stop-dropdown').value = res.data.stopId;
+                    }
                     await loadCurrentAvailability();
                 }
             } catch (err) {
@@ -418,8 +445,18 @@
                     selectedChoice = t.use_bus;
                     selectedStopId = t.bus_stop_id;
 
+                    const yesBtn = document.getElementById('btn-choice-yes');
+                    const noBtn = document.getElementById('btn-choice-no');
+                    const stopArea = document.getElementById('stop-selection-area');
+                    const statusPill = document.getElementById('status-pill');
+
                     if (t.use_bus === 'YES') {
-                        setChoice('YES');
+                        yesBtn.className = 'btn btn-teal flex-fill py-2 fw-bold';
+                        noBtn.className = 'btn btn-outline flex-fill py-2 fw-bold';
+                        stopArea.style.display = 'block';
+                        statusPill.className = 'badge badge-teal';
+                        statusPill.textContent = 'Taking Bus';
+
                         if (t.bus_stop_id) {
                             document.getElementById('stop-dropdown').value = t.bus_stop_id;
                         }
@@ -427,7 +464,11 @@
                             setUserLocation(parseFloat(t.latitude), parseFloat(t.longitude), t.stop_name || 'Designated Stop');
                         }
                     } else {
-                        setChoice('NO');
+                        yesBtn.className = 'btn btn-outline flex-fill py-2 fw-bold';
+                        noBtn.className = 'btn btn-danger flex-fill py-2 fw-bold';
+                        stopArea.style.display = 'none';
+                        statusPill.className = 'badge badge-red';
+                        statusPill.textContent = 'Not Coming';
                     }
 
                     // Attendance section
@@ -464,29 +505,45 @@
             }
         }
 
-        // QR Scanner Logic
-        function startScanner() {
+        // Camera Scanner Logic (Supports laptops, webcams, and mobile devices)
+        async function startScanner() {
             const scannerFeedback = document.getElementById('scanner-feedback');
-            scannerFeedback.textContent = 'Requesting camera access...';
+            scannerFeedback.textContent = 'Initializing camera...';
 
-            html5QrScanner = new Html5Qrcode("qr-reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            if (typeof Html5Qrcode === 'undefined') {
+                scannerFeedback.textContent = 'QR scanner script still loading. Use Instant Boarding Scan below.';
+                showAlert('Scanner library loading. Use the Instant Boarding Scan button below!', 'info');
+                return;
+            }
 
-            html5QrScanner.start(
-                { facingMode: "environment" },
-                config,
-                onScanSuccess,
-                (errorMessage) => {
-                    // scanning continuous frame
+            try {
+                if (html5QrScanner) {
+                    try { await html5QrScanner.stop(); } catch(e){}
                 }
-            ).then(() => {
+                html5QrScanner = new Html5Qrcode("qr-reader");
+
+                const cameras = await Html5Qrcode.getCameras().catch(() => []);
+                let cameraConfig = { facingMode: "user" };
+
+                if (cameras && cameras.length > 0) {
+                    cameraConfig = cameras[0].id;
+                }
+
+                await html5QrScanner.start(
+                    cameraConfig,
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    onScanSuccess,
+                    () => {}
+                );
+
                 document.getElementById('start-scan-btn').style.display = 'none';
                 document.getElementById('stop-scan-btn').style.display = 'inline-block';
                 scannerFeedback.textContent = 'Camera active! Point camera at driver QR code.';
-            }).catch(err => {
-                scannerFeedback.textContent = 'Camera error: ' + (err.message || 'Permission denied or no camera found.');
-                showAlert('Could not start camera. You may enter the token manually below.', 'warning');
-            });
+            } catch (err) {
+                console.error('Camera error:', err);
+                scannerFeedback.innerHTML = `<span class="text-danger">Camera error: ${err.message || 'Webcam access denied or unavailable.'}</span><br><small class="text-muted">Use the <b>Instant Boarding Scan</b> button above or enter the token below.</small>`;
+                showAlert('Camera not accessible. Please use the 1-Click Instant Scan button above!', 'warning');
+            }
         }
 
         function stopScanner() {
@@ -506,14 +563,29 @@
 
             let token = decodedText;
             try {
-                // Try to parse JSON payload if QR contains object
                 const parsed = JSON.parse(decodedText);
                 if (parsed.token) token = parsed.token;
-            } catch (e) {
-                // Raw token string
-            }
+            } catch (e) {}
 
             await verifyAndMarkAttendance(token);
+        }
+
+        // 1-Click Instant Scan
+        async function oneClickScanLiveToken() {
+            const scannerFeedback = document.getElementById('scanner-feedback');
+            scannerFeedback.textContent = 'Fetching current live driver QR token...';
+            try {
+                const tokenRes = await fetchApi('/attendance/live-token');
+                if (!tokenRes || !tokenRes.token) {
+                    showAlert(tokenRes.message || 'No live driver QR session found. Please ask driver to generate QR first.', 'warning');
+                    return;
+                }
+                scannerFeedback.textContent = 'Live token found! Marking verified attendance...';
+                await verifyAndMarkAttendance(tokenRes.token);
+            } catch (err) {
+                showAlert(err.message || 'Could not claim live QR code. Please ensure driver generated the code.', 'danger');
+                scannerFeedback.textContent = err.message || 'Failed to claim live token.';
+            }
         }
 
         async function submitManualToken() {
@@ -560,9 +632,7 @@
                     busMarker.bindPopup(`<b>${loc.busName || 'College Bus'}</b><br>Driver: ${loc.driverName || 'Active'}`).openPopup();
                     document.getElementById('bus-live-feedback').textContent = `Live Bus Location: Transmitting live coordinates (${formatTime(loc.updatedAt)})`;
                 }
-            } catch (err) {
-                // Ignore silent polling error
-            }
+            } catch (err) {}
         }
 
         // Startup

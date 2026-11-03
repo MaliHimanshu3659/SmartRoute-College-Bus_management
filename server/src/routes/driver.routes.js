@@ -11,3 +11,4 @@ router.post('/location', requireRole('driver'), driverController.updateBusLocati
 router.get('/latest-location', driverController.getLatestBusLocation);
 
 module.exports = router;
+

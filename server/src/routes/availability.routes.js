@@ -12,3 +12,4 @@ router.get('/profile', availabilityController.getProfile);
 router.post('/profile', requireRole('student', 'admin'), availabilityController.updateProfile);
 
 module.exports = router;
+

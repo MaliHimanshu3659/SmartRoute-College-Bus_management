@@ -227,3 +227,4 @@ Retrieves authenticated student's historical attendance records.
 - `POST /api/admin/routes`: Create route.
 - `GET /api/admin/attendance`: View and filter college attendance logs.
 - `GET /api/admin/logs`: View system audit trail.
+

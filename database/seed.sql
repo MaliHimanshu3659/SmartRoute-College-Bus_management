@@ -73,3 +73,4 @@ VALUES
 (4, CURDATE(), 'YES', 5, 24.587008, 73.699107),
 (5, CURDATE(), 'NO', NULL, NULL, NULL)
 ON DUPLICATE KEY UPDATE use_bus=VALUES(use_bus), bus_stop_id=VALUES(bus_stop_id);
+

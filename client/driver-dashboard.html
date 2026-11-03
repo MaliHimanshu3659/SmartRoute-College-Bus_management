@@ -220,11 +220,19 @@
         let gpsWatchId = null;
         let isSharingGps = false;
 
+        let currentSessionToken = '';
+
         function initMap() {
             map = L.map('map').setView([24.5883, 73.7125], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
             }).addTo(map);
+
+            setTimeout(() => {
+                if (map) map.invalidateSize();
+            }, 300);
         }
 
         async function loadDriverData() {
@@ -301,26 +309,36 @@
 
         function renderRidersManifest(riders) {
             const container = document.getElementById('riders-list-container');
-            document.getElementById('riders-manifest-count').textContent = `${riders.length} Active Riders`;
+            const activeCount = riders.filter(r => r.useBus === 'YES').length;
+            document.getElementById('riders-manifest-count').textContent = `${activeCount} Active / ${riders.length} Total`;
 
             if (riders.length === 0) {
-                container.innerHTML = '<div class="text-center text-muted py-3">No students marked YES for bus pickup today.</div>';
+                container.innerHTML = '<div class="text-center text-muted py-3">No student declarations for bus pickup today.</div>';
                 return;
             }
 
-            container.innerHTML = riders.map(r => `
-                <div class="d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded">
+            container.innerHTML = riders.map(r => {
+                let badgeHtml = '';
+                if (r.useBus === 'NO') {
+                    badgeHtml = '<span class="badge badge-red">✗ Skipped / Not Coming</span>';
+                } else if (r.isScanned) {
+                    badgeHtml = '<span class="badge badge-green">✓ Boarded / Present</span>';
+                } else {
+                    badgeHtml = '<span class="badge badge-amber">⏳ Pending QR Boarding</span>';
+                }
+
+                return `
+                <div class="d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded ${r.useBus === 'NO' ? 'opacity-75' : ''}">
                     <div>
-                        <strong class="d-block text-dark">${r.displayName}</strong>
-                        <small class="text-muted">Stop: ${r.stopName} (${r.enrollment})</small>
+                        <strong class="d-block text-dark">${r.displayName} <span class="text-muted small">(@${r.username})</span></strong>
+                        <small class="text-muted">Stop: <b>${r.stopName}</b> | Roll: ${r.enrollment}</small>
                     </div>
                     <div>
-                        <span class="badge ${r.isScanned ? 'badge-green' : 'badge-amber'}">
-                            ${r.isScanned ? '✓ QR Marked' : 'Pending'}
-                        </span>
+                        ${badgeHtml}
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function plotDriverMap(stops, riders) {
@@ -386,12 +404,16 @@
                 });
 
                 if (res && res.success) {
+                    currentSessionToken = res.token;
                     document.getElementById('qr-placeholder').style.display = 'none';
                     const container = document.getElementById('qr-code-image-container');
                     container.style.display = 'block';
 
                     document.getElementById('qr-image').src = res.qrDataUrl;
-                    document.getElementById('qr-token-preview').textContent = `Token: ${res.token.slice(0, 16)}...`;
+                    document.getElementById('qr-token-preview').innerHTML = `
+                        <div class="fw-bold text-dark font-monospace mb-1" style="word-break: break-all; font-size: 11px;">Token: ${res.token}</div>
+                        <button type="button" class="btn btn-outline btn-sm py-0 px-2" onclick="navigator.clipboard.writeText('${res.token}'); showAlert('Token copied to clipboard!', 'info');">📋 Copy Token</button>
+                    `;
 
                     startCountdown(res.expiresInSeconds || 60);
                 }
@@ -417,9 +439,9 @@
 
                 if (remaining <= 0) {
                     clearInterval(qrTimerInterval);
-                    timerEl.textContent = 'EXPIRED — Click Refresh to renew';
-                    timerEl.className = 'countdown-badge badge-red';
-                    // Re-query dashboard so new scans show
+                    timerEl.textContent = 'Refreshing QR code...';
+                    // Auto-renew QR code so driver always has an active valid code
+                    generateQrSession();
                     loadDriverData();
                 }
                 remaining--;
@@ -481,9 +503,12 @@
             await checkAuth('driver');
             initMap();
             await loadDriverData();
-            // Poll for attendance updates every 15s
-            setInterval(loadDriverData, 15000);
+            // Automatically generate live QR session on load
+            await generateQrSession();
+            // Poll for attendance updates every 5 seconds for live sync
+            setInterval(loadDriverData, 5000);
         })();
     </script>
 </body>
 </html>
+

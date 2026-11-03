@@ -22,3 +22,4 @@ router.get('/attendance', adminController.listAttendanceRecords);
 router.get('/logs', adminController.listLogs);
 
 module.exports = router;
+

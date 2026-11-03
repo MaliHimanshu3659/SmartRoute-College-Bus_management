@@ -111,11 +111,10 @@
                 <h2 class="font-display fw-bold mb-1" style="color: var(--navy);">Sign In</h2>
                 <p class="text-muted small mb-4">Choose your role and enter credentials to continue</p>
 
-                <!-- Role Switcher -->
+                <!-- Role Switcher (Student & Driver Only) -->
                 <div class="role-pill-group" id="role-selector">
                     <button type="button" class="role-pill-btn active" data-role="student">Student</button>
                     <button type="button" class="role-pill-btn" data-role="driver">Driver</button>
-                    <button type="button" class="role-pill-btn" data-role="admin">Admin</button>
                 </div>
 
                 <div id="alert-container"></div>
@@ -138,16 +137,6 @@
                         Sign In to SmartRoute
                     </button>
                 </form>
-
-                <!-- Demo quick-fill helpers -->
-                <div class="mt-4 pt-3 border-top text-center">
-                    <span class="text-muted small d-block mb-2">Quick Demo Accounts (Password: <code>password123</code>):</span>
-                    <div class="d-flex gap-1 justify-content-center flex-wrap">
-                        <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('student1', 'student')">Student 1</button>
-                        <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('driver1', 'driver')">Driver</button>
-                        <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('admin', 'admin')">Admin</button>
-                    </div>
-                </div>
 
                 <div class="text-center mt-3">
                     <span class="text-muted small">New student? </span>
@@ -183,13 +172,6 @@
                 togglePassword.textContent = 'Show';
             }
         });
-
-        // Quick demo filler
-        function fillDemo(username, role) {
-            document.getElementById('username').value = username;
-            document.getElementById('password').value = 'password123';
-            document.querySelector(`.role-pill-btn[data-role="${role}"]`).click();
-        }
 
         // Form submission with Fetch API
         document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -234,3 +216,4 @@
     </script>
 </body>
 </html>
+

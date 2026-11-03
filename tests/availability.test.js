@@ -71,3 +71,4 @@ test('Student Availability Module Tests', async (t) => {
         assert(Array.isArray(res.body.weekCards));
     });
 });
+

@@ -51,3 +51,4 @@ module.exports = {
     calculateDistanceMeters,
     findNearestStop
 };
+

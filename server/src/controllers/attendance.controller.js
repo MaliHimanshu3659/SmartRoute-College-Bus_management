@@ -41,10 +41,10 @@ async function createAttendanceSession(req, res) {
 async function getActiveSession(req, res) {
     try {
         const driverId = req.session.user.id;
-        const todayDate = new Date().toISOString().split('T')[0];
+        const todayDate = new Date().toLocaleDateString('en-CA');
 
         const sessions = await query(
-            `SELECT id, route_id, expires_at, created_at, is_revoked 
+            `SELECT id, route_id, raw_token, expires_at, created_at, is_revoked 
              FROM attendance_sessions 
              WHERE driver_id = ? AND session_date = ? AND is_revoked = 0 AND expires_at > NOW()
              ORDER BY id DESC LIMIT 1`,
@@ -58,16 +58,71 @@ async function getActiveSession(req, res) {
         const session = sessions[0];
         const remainingSeconds = Math.max(0, Math.round((new Date(session.expires_at).getTime() - Date.now()) / 1000));
 
+        if (remainingSeconds <= 0) {
+            return res.json({ success: true, hasActiveSession: false });
+        }
+
+        // Generate QR image data url for the active session
+        const QRCode = require('qrcode');
+        const qrPayload = JSON.stringify({
+            sessionId: session.id,
+            token: session.raw_token,
+            routeId: session.route_id,
+            date: todayDate,
+            expiresAt: new Date(session.expires_at).toISOString()
+        });
+
+        const qrDataUrl = await QRCode.toDataURL(qrPayload, {
+            errorCorrectionLevel: 'M',
+            margin: 2,
+            width: 280,
+            color: { dark: '#0d1f3c', light: '#ffffff' }
+        });
+
         return res.json({
             success: true,
-            hasActiveSession: remainingSeconds > 0,
+            hasActiveSession: true,
             sessionId: session.id,
+            token: session.raw_token,
+            qrDataUrl,
             remainingSeconds,
             expiresAt: session.expires_at
         });
     } catch (err) {
         console.error('[Attendance Controller] getActiveSession error:', err);
         return res.status(500).json({ success: false, message: 'Server error checking session.' });
+    }
+}
+
+/**
+ * Retrieve the active driver QR token for 1-click scanning on same machine
+ */
+async function getActiveLiveToken(req, res) {
+    try {
+        const todayDate = new Date().toLocaleDateString('en-CA');
+        const sessions = await query(
+            `SELECT id, raw_token, expires_at, route_id 
+             FROM attendance_sessions 
+             WHERE session_date = ? AND is_revoked = 0 AND expires_at > NOW() 
+             ORDER BY id DESC LIMIT 1`,
+            [todayDate]
+        );
+
+        if (sessions.length === 0 || !sessions[0].raw_token) {
+            return res.status(404).json({
+                success: false,
+                message: 'No live driver QR session is currently active. Ask the driver to generate a QR code first.'
+            });
+        }
+
+        return res.json({
+            success: true,
+            token: sessions[0].raw_token,
+            expiresAt: sessions[0].expires_at
+        });
+    } catch (err) {
+        console.error('[Attendance Controller] getActiveLiveToken error:', err);
+        return res.status(500).json({ success: false, message: 'Server error retrieving live token.' });
     }
 }
 
@@ -96,7 +151,7 @@ async function scanAttendance(req, res) {
         }
 
         const session = validation.session;
-        const todayDate = new Date().toISOString().split('T')[0];
+        const todayDate = new Date().toLocaleDateString('en-CA');
 
         // 2. Check if attendance already recorded today for this student
         const existingAttendance = await query(
@@ -218,6 +273,8 @@ async function getStudentAttendanceHistory(req, res) {
 module.exports = {
     createAttendanceSession,
     getActiveSession,
+    getActiveLiveToken,
     scanAttendance,
     getStudentAttendanceHistory
 };
+
