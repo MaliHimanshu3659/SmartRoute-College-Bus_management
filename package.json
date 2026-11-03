@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node server/src/server.js",
     "dev": "node server/src/server.js",
-    "db:init": "node database/init.js",
-    "test": "node --test --test-force-exit tests/*.test.js"
+    "db:init": "node database/init.js"
   },
   "repository": {
     "type": "git",
@@ -36,8 +35,5 @@
     "morgan": "^1.12.1",
     "mysql2": "^3.24.6",
     "qrcode": "^1.5.4"
-  },
-  "devDependencies": {
-    "supertest": "^7.3.1"
   }
 }

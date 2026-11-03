@@ -12,7 +12,6 @@ const availabilityRoutes = require('./routes/availability.routes');
 const stopsRoutes = require('./routes/stops.routes');
 const driverRoutes = require('./routes/driver.routes');
 const attendanceRoutes = require('./routes/attendance.routes');
-const adminRoutes = require('./routes/admin.routes');
 
 const app = express();
 
@@ -63,7 +62,6 @@ app.use('/api/availability', availabilityRoutes);
 app.use('/api', stopsRoutes);
 app.use('/api/driver', driverRoutes);
 app.use('/api/attendance', attendanceRoutes);
-app.use('/api/admin', adminRoutes);
 
 // Map tile proxy endpoint (No API key required, zero 403 blocks, local disk caching)
 const { getTile } = require('./controllers/tiles.controller');

@@ -5,8 +5,8 @@ const { requireAuth, requireRole } = require('../middleware/auth.middleware');
 
 router.use(requireAuth);
 
-router.get('/dashboard', requireRole('driver', 'admin'), driverController.getDriverDashboard);
-router.get('/availability', requireRole('driver', 'admin'), driverController.getDriverAvailability);
+router.get('/dashboard', requireRole('driver'), driverController.getDriverDashboard);
+router.get('/availability', requireRole('driver'), driverController.getDriverAvailability);
 router.post('/location', requireRole('driver'), driverController.updateBusLocation);
 router.get('/latest-location', driverController.getLatestBusLocation);
 

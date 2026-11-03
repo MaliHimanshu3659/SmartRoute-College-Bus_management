@@ -6,11 +6,11 @@ const { scanLimiter } = require('../middleware/rateLimiter.middleware');
 
 router.use(requireAuth);
 
-router.post('/sessions', requireRole('driver', 'admin'), attendanceController.createAttendanceSession);
-router.get('/sessions/active', requireRole('driver', 'admin'), attendanceController.getActiveSession);
-router.get('/live-token', requireRole('student', 'driver', 'admin'), attendanceController.getActiveLiveToken);
-router.post('/scan', scanLimiter, requireRole('student', 'admin'), attendanceController.scanAttendance);
-router.get('/history', requireRole('student', 'admin'), attendanceController.getStudentAttendanceHistory);
+router.post('/sessions', requireRole('driver'), attendanceController.createAttendanceSession);
+router.get('/sessions/active', requireRole('driver'), attendanceController.getActiveSession);
+router.get('/live-token', requireRole('student', 'driver'), attendanceController.getActiveLiveToken);
+router.post('/scan', scanLimiter, requireRole('student'), attendanceController.scanAttendance);
+router.get('/history', requireRole('student'), attendanceController.getStudentAttendanceHistory);
 
 module.exports = router;
 

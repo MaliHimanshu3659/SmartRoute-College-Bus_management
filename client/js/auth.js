@@ -22,7 +22,7 @@ async function checkAuth(requiredRole = null) {
             }
 
             // Role restriction check
-            if (requiredRole && currentUser.role !== requiredRole && currentUser.role !== 'admin') {
+            if (requiredRole && currentUser.role !== requiredRole) {
                 alert(`Access denied. This page requires '${requiredRole}' privileges.`);
                 redirectToDashboard(currentUser.role);
                 return;
