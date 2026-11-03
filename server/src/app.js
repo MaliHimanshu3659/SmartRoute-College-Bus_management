@@ -65,6 +65,10 @@ app.use('/api/driver', driverRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Map tile proxy endpoint (No API key required, zero 403 blocks, local disk caching)
+const { getTile } = require('./controllers/tiles.controller');
+app.get('/api/tiles/:z/:x/:y', getTile);
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({
