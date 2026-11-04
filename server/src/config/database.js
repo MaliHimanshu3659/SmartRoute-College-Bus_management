@@ -1,10 +1,23 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
+const TIDB_CLOUD_URL = 'mysql://2HDJ6LitKyD9sar.root:YewDGQgJk66jEgUn@gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/smartroute';
+
 function getPoolConfig() {
-    const dbUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+    let dbUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+
+    // In serverless / Vercel cloud runtime, use the TiDB Cloud MySQL database
+    if (process.env.VERCEL) {
+        if (!dbUrl || dbUrl.includes('sslmode') || !dbUrl.includes('tidbcloud')) {
+            dbUrl = TIDB_CLOUD_URL;
+        }
+    }
 
     if (dbUrl) {
+        const needsSsl = process.env.MYSQL_SSL === 'true' || 
+                         dbUrl.includes('ssl') || 
+                         dbUrl.includes('tidbcloud.com') || 
+                         dbUrl.includes('aivencloud.com');
         return {
             uri: dbUrl,
             waitForConnections: true,
@@ -13,9 +26,7 @@ function getPoolConfig() {
             enableKeepAlive: true,
             keepAliveInitialDelay: 0,
             dateStrings: true,
-            ssl: process.env.MYSQL_SSL === 'true' || dbUrl.includes('ssl')
-                ? { rejectUnauthorized: false }
-                : undefined
+            ssl: needsSsl ? { minVersion: 'TLSv1.2', rejectUnauthorized: false } : undefined
         };
     }
 
