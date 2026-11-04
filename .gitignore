@@ -25,3 +25,5 @@ Thumbs.db
 
 # Cached tiles
 server/data/tile_cache/
+
+.vercel

@@ -1,14 +1,19 @@
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
-const TILE_CACHE_DIR = path.join(__dirname, '../../data/tile_cache');
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+const TILE_CACHE_DIR = isServerless
+    ? path.join(os.tmpdir(), 'smartroute_tile_cache')
+    : path.join(__dirname, '../../data/tile_cache');
+
 try {
     if (!fs.existsSync(TILE_CACHE_DIR)) {
         fs.mkdirSync(TILE_CACHE_DIR, { recursive: true });
     }
 } catch (e) {
-    console.error('Failed to create tile cache dir:', e.message);
+    console.warn('[Tile Proxy] Cache directory creation warning:', e.message);
 }
 
 function getTile(req, res) {
@@ -26,11 +31,13 @@ function getTile(req, res) {
     const cacheFilePath = path.join(TILE_CACHE_DIR, `${zNum}_${xNum}_${yNum}.png`);
 
     // Return from disk cache if already cached
-    if (fs.existsSync(cacheFilePath)) {
-        res.setHeader('Content-Type', 'image/png');
-        res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
-        return fs.createReadStream(cacheFilePath).pipe(res);
-    }
+    try {
+        if (fs.existsSync(cacheFilePath)) {
+            res.setHeader('Content-Type', 'image/png');
+            res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+            return fs.createReadStream(cacheFilePath).pipe(res);
+        }
+    } catch (e) {}
 
     // Fetch from OpenStreetMap with sanctioned application User-Agent
     const url = `https://tile.openstreetmap.org/${zNum}/${xNum}/${yNum}.png`;
@@ -44,8 +51,12 @@ function getTile(req, res) {
             res.setHeader('Content-Type', 'image/png');
             res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
 
-            const writeStream = fs.createWriteStream(cacheFilePath);
-            osmRes.pipe(writeStream);
+            try {
+                const writeStream = fs.createWriteStream(cacheFilePath);
+                writeStream.on('error', () => {});
+                osmRes.pipe(writeStream);
+            } catch (e) {}
+
             osmRes.pipe(res);
         } else {
             res.status(osmRes.statusCode).end();

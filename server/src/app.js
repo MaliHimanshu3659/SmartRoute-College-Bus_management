@@ -41,6 +41,10 @@ try {
         checkExpirationInterval: 900000, // Check every 15 min
         expiration: 86400000 // 1 day
     }, pool);
+
+    sessionStore.on('error', (storeErr) => {
+        console.warn('[Session Store] MySQL session store warning (requests will proceed):', storeErr.message);
+    });
 } catch (err) {
     console.warn('[Session Store] Could not initialize MySQL session store, falling back to memory store:', err.message);
 }

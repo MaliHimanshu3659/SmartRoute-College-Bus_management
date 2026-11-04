@@ -40,8 +40,16 @@ function getPoolConfig() {
 const pool = mysql.createPool(getPoolConfig());
 
 async function query(sql, params = []) {
-    const [results] = await pool.execute(sql, params);
-    return results;
+    try {
+        const [results] = await pool.execute(sql, params);
+        return results;
+    } catch (err) {
+        if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' || err.code === 'ETIMEDOUT') {
+            console.error('[Database Connection Error]', err.message);
+            throw new Error('Database connection failed. Please ensure a valid cloud MySQL DATABASE_URL is configured in your environment variables.');
+        }
+        throw err;
+    }
 }
 
 // Test connection on startup
