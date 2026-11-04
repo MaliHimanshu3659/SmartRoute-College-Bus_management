@@ -99,11 +99,11 @@
 
                 <div class="stat-card">
                     <div class="stat-header">
-                        <span class="stat-label">Active Riders Today</span>
-                        <div class="stat-icon green">👥</div>
+                        <span class="stat-label">My Pickup Stop</span>
+                        <div class="stat-icon green">📍</div>
                     </div>
-                    <div class="stat-value" id="stat-active-riders">--</div>
-                    <div class="stat-change">Total students taking bus</div>
+                    <div class="stat-value" id="stat-my-stop" style="font-size: 1.25rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">--</div>
+                    <div class="stat-change" id="stat-stop-time">Campus Route 01</div>
                 </div>
             </div>
 
@@ -208,7 +208,21 @@
                 document.getElementById('stat-days-marked').textContent = `${data.daysMarked}`;
                 document.getElementById('stat-absent-count').textContent = `${data.absentCount} days skipped this month`;
                 document.getElementById('stat-arrival-time').textContent = data.primaryRoute.arrival_time || '09:20 AM';
-                document.getElementById('stat-active-riders').textContent = `${data.activeRidersCount} riders`;
+                // Set student stop card
+                const stopEl = document.getElementById('stat-my-stop');
+                const timeEl = document.getElementById('stat-stop-time');
+                if (stopEl) {
+                    if (currentRecord && currentRecord.use_bus === 'YES') {
+                        stopEl.textContent = currentRecord.stop_name || 'Designated Stop';
+                        timeEl.textContent = currentRecord.scheduled_time ? `Scheduled: ${currentRecord.scheduled_time}` : (data.primaryRoute?.route_name || 'Campus Route 01');
+                    } else if (currentRecord && currentRecord.use_bus === 'NO') {
+                        stopEl.textContent = 'Skipping Today';
+                        timeEl.textContent = 'Bus will not stop for pickup';
+                    } else {
+                        stopEl.textContent = 'Not Selected';
+                        timeEl.textContent = 'Select stop in Availability';
+                    }
+                }
 
                 // Set summary
                 document.getElementById('summary-present').textContent = data.presentCount;

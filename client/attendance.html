@@ -70,7 +70,7 @@
                         <div class="stat-icon green">✓</div>
                     </div>
                     <div class="stat-value" id="stat-present">0</div>
-                    <div class="stat-change good">Verified QR boarding scans</div>
+                    <div class="stat-change good">Verified boarding & bus usage</div>
                 </div>
 
                 <div class="stat-card">
@@ -159,9 +159,9 @@
                     <td><strong>${formatDate(r.date)}</strong></td>
                     <td>${r.routeName} (${r.busName})</td>
                     <td>${r.stopName}</td>
-                    <td>${formatTime(r.markedAt)}</td>
-                    <td><span class="badge badge-blue">${r.source}</span></td>
-                    <td><span class="badge badge-green">✓ Present</span></td>
+                    <td>${r.markedAt ? formatTime(r.markedAt) : '--'}</td>
+                    <td><span class="badge ${r.isVerified ? 'badge-blue' : 'badge-amber'}">${r.source}</span></td>
+                    <td><span class="badge ${r.statusBadge || 'badge-green'}">${r.status}</span></td>
                 </tr>
             `).join('');
         }

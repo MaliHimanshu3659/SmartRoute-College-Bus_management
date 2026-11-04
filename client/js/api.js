@@ -82,11 +82,22 @@ function showAlert(message, type = 'info', containerId = 'alert-container') {
 }
 
 /**
- * Format ISO date string into readable format (e.g. "Tuesday, 03 Nov 2026")
+ * Format ISO or YYYY-MM-DD date string into readable format (e.g. "Tue, 03 Nov 2026")
  */
 function formatDate(dateInput) {
     if (!dateInput) return 'N/A';
+    if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+        const parts = dateInput.split('-');
+        const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 12);
+        return d.toLocaleDateString('en-GB', {
+            weekday: 'short',
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
+    }
     const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput);
     return d.toLocaleDateString('en-GB', {
         weekday: 'short',
         day: '2-digit',
@@ -99,8 +110,12 @@ function formatDate(dateInput) {
  * Format time string (e.g. "08:30 AM")
  */
 function formatTime(dateInput) {
-    if (!dateInput) return 'N/A';
+    if (!dateInput) return '--';
+    if (typeof dateInput === 'string' && (dateInput.includes('AM') || dateInput.includes('PM'))) {
+        return dateInput;
+    }
     const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput);
     return d.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'

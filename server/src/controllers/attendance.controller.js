@@ -199,47 +199,103 @@ async function scanAttendance(req, res) {
 
 /**
  * Get attendance history for the authenticated student
+ * Integrates daily availability declarations with verified QR boarding records
  */
 async function getStudentAttendanceHistory(req, res) {
     try {
         const studentId = req.session.user.id;
 
         const records = await query(
-            `SELECT att.id, att.attendance_date, att.marked_at, att.source,
-                    r.route_name, r.bus_name, s.stop_name,
-                    sa.use_bus as availability_declared
+            `SELECT 
+                COALESCE(sa.availability_date, att.attendance_date) as record_date,
+                sa.use_bus,
+                sa.created_at as avail_created_at,
+                sa.updated_at as avail_updated_at,
+                att.id as attendance_id,
+                att.marked_at as scan_marked_at,
+                att.source as scan_source,
+                COALESCE(s_att.stop_name, s_sa.stop_name, 'Campus Route Stop') as stop_name,
+                COALESCE(r.route_name, 'Rampura to Campus') as route_name,
+                COALESCE(r.bus_name, 'Campus Route 01') as bus_name
+             FROM student_availability sa
+             LEFT JOIN attendance_records att 
+                ON att.student_id = sa.student_id AND att.attendance_date = sa.availability_date
+             LEFT JOIN bus_stops s_sa ON sa.bus_stop_id = s_sa.id
+             LEFT JOIN bus_stops s_att ON att.bus_stop_id = s_att.id
+             LEFT JOIN routes r ON COALESCE(att.route_id, 1) = r.id
+             WHERE sa.student_id = ?
+
+             UNION
+
+             SELECT 
+                att.attendance_date as record_date,
+                'YES' as use_bus,
+                att.marked_at as avail_created_at,
+                att.marked_at as avail_updated_at,
+                att.id as attendance_id,
+                att.marked_at as scan_marked_at,
+                att.source as scan_source,
+                COALESCE(s.stop_name, 'Campus Route Stop') as stop_name,
+                COALESCE(r.route_name, 'Rampura to Campus') as route_name,
+                COALESCE(r.bus_name, 'Campus Route 01') as bus_name
              FROM attendance_records att
-             LEFT JOIN routes r ON att.route_id = r.id
+             LEFT JOIN student_availability sa 
+                ON sa.student_id = att.student_id AND sa.availability_date = att.attendance_date
              LEFT JOIN bus_stops s ON att.bus_stop_id = s.id
-             LEFT JOIN student_availability sa ON sa.student_id = att.student_id AND sa.availability_date = att.attendance_date
-             WHERE att.student_id = ?
-             ORDER BY att.attendance_date DESC, att.marked_at DESC`,
-            [studentId]
+             LEFT JOIN routes r ON att.route_id = r.id
+             WHERE att.student_id = ? AND sa.id IS NULL
+
+             ORDER BY record_date DESC`,
+            [studentId, studentId]
         );
 
-        // Summary counts
-        const totalPresent = records.length;
-        const totalAvailRows = await query(
-            `SELECT COUNT(*) as absent_count FROM student_availability 
-             WHERE student_id = ? AND use_bus = 'NO'`,
-            [studentId]
-        );
-        const totalAbsent = totalAvailRows[0]?.absent_count || 0;
+        let totalPresent = 0;
+        let totalAbsent = 0;
+
+        const formattedHistory = records.map(r => {
+            const hasQrScan = !!r.attendance_id;
+            const isTakingBus = r.use_bus === 'YES';
+            let status = 'Taking Bus (YES)';
+            let statusBadge = 'badge-teal';
+            let source = 'Daily Availability';
+            let markedAt = r.scan_marked_at || r.avail_updated_at || r.avail_created_at;
+
+            if (hasQrScan) {
+                status = 'Verified Boarding';
+                statusBadge = 'badge-green';
+                source = r.scan_source || 'QR Code Scan';
+                totalPresent++;
+            } else if (isTakingBus) {
+                status = 'Taking Bus (YES)';
+                statusBadge = 'badge-teal';
+                source = 'Daily Availability';
+                totalPresent++;
+            } else {
+                status = 'Skipped (Absent)';
+                statusBadge = 'badge-red';
+                source = 'Daily Availability';
+                totalAbsent++;
+            }
+
+            return {
+                id: r.attendance_id || `avail_${r.record_date}`,
+                date: r.record_date,
+                markedAt: markedAt,
+                source: source,
+                routeName: r.route_name || 'Rampura to Campus',
+                busName: r.bus_name || 'Campus Route 01',
+                stopName: isTakingBus || hasQrScan ? r.stop_name : 'Skipped (Not Taking Bus)',
+                status: status,
+                statusBadge: statusBadge,
+                isVerified: hasQrScan
+            };
+        });
 
         return res.json({
             success: true,
             totalPresent,
             totalAbsent,
-            history: records.map(r => ({
-                id: r.id,
-                date: r.attendance_date,
-                markedAt: r.marked_at,
-                source: r.source,
-                routeName: r.route_name || 'Campus Route',
-                busName: r.bus_name || 'Campus Route 01',
-                stopName: r.stop_name || 'Default Route Stop',
-                status: 'Present'
-            }))
+            history: formattedHistory
         });
     } catch (err) {
         console.error('[Attendance Controller] getStudentAttendanceHistory error:', err);
