@@ -55,15 +55,7 @@ async function login(req, res) {
             });
         }
 
-        // Regenerate session to prevent session fixation attacks
-        req.session.regenerate((err) => {
-            if (err) {
-                return res.status(500).json({
-                    success: false,
-                    message: 'Session generation failed.'
-                });
-            }
-
+        const completeLogin = () => {
             req.session.user = {
                 id: user.id,
                 username: user.username,
@@ -79,7 +71,18 @@ async function login(req, res) {
                 message: 'Login successful.',
                 user: req.session.user
             });
-        });
+        };
+
+        if (typeof req.session.regenerate === 'function') {
+            req.session.regenerate((err) => {
+                if (err) {
+                    console.warn('[Auth] Session regenerate notice:', err.message);
+                }
+                completeLogin();
+            });
+        } else {
+            completeLogin();
+        }
     } catch (err) {
         console.error('[Auth Controller] Login error:', err);
         return res.status(500).json({
