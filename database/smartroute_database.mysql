@@ -107,6 +107,7 @@ CREATE TABLE IF NOT EXISTS attendance_sessions (
     route_id INT NOT NULL,
     session_date DATE NOT NULL,
     token_hash VARCHAR(64) NOT NULL UNIQUE,
+    raw_token VARCHAR(255) NULL,
     expires_at DATETIME NOT NULL,
     is_revoked TINYINT(1) NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
