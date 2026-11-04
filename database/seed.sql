@@ -1,5 +1,4 @@
 -- SmartRoute Seed Data (Clean Setup - No Demo Users)
-USE smartroute;
 
 -- 1. Insert Bus Stops (Campus Route Stops)
 INSERT INTO bus_stops (id, stop_name, latitude, longitude, scheduled_time, is_active)

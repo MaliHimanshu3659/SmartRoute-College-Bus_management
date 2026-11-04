@@ -15,6 +15,9 @@ const attendanceRoutes = require('./routes/attendance.routes');
 
 const app = express();
 
+// Trust reverse proxy (essential for cloud platforms like Render, Railway, Heroku)
+app.set('trust proxy', 1);
+
 // Security HTTP headers (disable strict CSP so CDNs, map tiles, webcams, and inline events work seamlessly)
 app.use(helmet({
     contentSecurityPolicy: false,
@@ -42,6 +45,8 @@ try {
     console.warn('[Session Store] Could not initialize MySQL session store, falling back to memory store:', err.message);
 }
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 app.use(session({
     key: 'smartroute_sid',
     secret: process.env.SESSION_SECRET || 'smartroute_dev_secret_key_change_me',
@@ -50,7 +55,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProduction && process.env.COOKIE_SECURE !== 'false',
         sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }

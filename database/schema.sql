@@ -1,9 +1,6 @@
 -- SmartRoute MySQL Database Schema
 -- Compatible with MySQL 8.0+
 
-CREATE DATABASE IF NOT EXISTS smartroute CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE smartroute;
-
 -- 1. Users Table
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
